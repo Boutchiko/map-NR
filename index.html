@@ -1,45 +1,131 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Carte NRP</title>
 
   <style>
-    body {
+    html, body {
       margin: 0;
-      background: #111;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
+      background: #000;
     }
 
-    img {
-      width: 100%;
-      height: auto;
+    #viewer {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+      cursor: grab;
       user-select: none;
+    }
+
+    #viewer.dragging {
+      cursor: grabbing;
+    }
+
+    #map {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform-origin: center center;
+      max-width: none;
+      max-height: none;
       -webkit-user-drag: none;
+      user-select: none;
       pointer-events: none;
     }
   </style>
 </head>
-
 <body oncontextmenu="return false">
 
-<img src="map.png">
+  <div id="viewer">
+    <img id="map" src="map.png" alt="Carte">
+  </div>
 
-<script>
-  // bloque clic droit
-  document.addEventListener("contextmenu", e => e.preventDefault());
+  <script>
+    const viewer = document.getElementById("viewer");
+    const map = document.getElementById("map");
 
-  // bloque drag image
-  document.addEventListener("dragstart", e => e.preventDefault());
+    let scale = 1;
+    let minScale = 0.4;
+    let maxScale = 5;
 
-  // bloque certaines touches
-  document.addEventListener("keydown", function(e) {
-    if (e.key === "F12" || 
-       (e.ctrlKey && e.shiftKey && e.key === "I") ||
-       (e.ctrlKey && e.key === "U")) {
-      e.preventDefault();
+    let x = 0;
+    let y = 0;
+
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+
+    function updateTransform() {
+      map.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
     }
-  });
-</script>
+
+    map.addEventListener("load", () => {
+      updateTransform();
+    });
+
+    viewer.addEventListener("wheel", (e) => {
+      e.preventDefault();
+
+      const zoomAmount = 0.1;
+      const oldScale = scale;
+
+      if (e.deltaY < 0) {
+        scale += zoomAmount;
+      } else {
+        scale -= zoomAmount;
+      }
+
+      scale = Math.max(minScale, Math.min(maxScale, scale));
+
+      if (scale !== oldScale) {
+        updateTransform();
+      }
+    }, { passive: false });
+
+    viewer.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return;
+      isDragging = true;
+      viewer.classList.add("dragging");
+      startX = e.clientX - x;
+      startY = e.clientY - y;
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      x = e.clientX - startX;
+      y = e.clientY - startY;
+      updateTransform();
+    });
+
+    window.addEventListener("mouseup", () => {
+      isDragging = false;
+      viewer.classList.remove("dragging");
+    });
+
+    // bloque clic droit
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    // bloque drag image
+    document.addEventListener("dragstart", (e) => e.preventDefault());
+
+    // bloque quelques raccourcis basiques
+    document.addEventListener("keydown", (e) => {
+      if (
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J" || e.key === "C")) ||
+        (e.ctrlKey && e.key === "U") ||
+        (e.ctrlKey && e.key === "S")
+      ) {
+        e.preventDefault();
+      }
+    });
+  </script>
 
 </body>
 </html>

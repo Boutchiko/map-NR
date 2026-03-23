@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Carte NRP</title>
 
   <style>
@@ -11,96 +11,526 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #000;
+      background: #0b0b0b;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    #app {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
     }
 
     #viewer {
-      width: 100vw;
-      height: 100vh;
+      position: absolute;
+      inset: 0;
       overflow: hidden;
-      position: relative;
       cursor: grab;
-      user-select: none;
+      background: #000;
     }
 
     #viewer.dragging {
       cursor: grabbing;
     }
 
-    #map {
+    #world {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform-origin: center center;
+      left: 0;
+      top: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    #map {
+      display: block;
       max-width: none;
       max-height: none;
-      -webkit-user-drag: none;
       user-select: none;
+      -webkit-user-drag: none;
       pointer-events: none;
+    }
+
+    .marker {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid white;
+      background: rgba(255, 80, 80, 0.95);
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      pointer-events: auto;
+      z-index: 5;
+    }
+
+    .marker.hidden {
+      display: none;
+    }
+
+    .marker:hover {
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .tooltip {
+      position: absolute;
+      min-width: 180px;
+      max-width: 260px;
+      background: rgba(20, 20, 20, 0.96);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+      z-index: 20;
+      display: none;
+      pointer-events: none;
+    }
+
+    .tooltip-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .tooltip-text {
+      font-size: 13px;
+      line-height: 1.4;
+      color: #ddd;
+    }
+
+    #sidebar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 320px;
+      max-width: calc(100vw - 70px);
+      height: 100%;
+      background: rgba(14, 14, 14, 0.96);
+      border-right: 1px solid rgba(255,255,255,0.08);
+      z-index: 30;
+      transform: translateX(0);
+      transition: transform 0.25s ease;
+      overflow-y: auto;
+      padding: 18px 14px 18px 14px;
+    }
+
+    #sidebar.closed {
+      transform: translateX(-100%);
+    }
+
+    #toggleSidebar {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 40;
+      border: none;
+      background: rgba(20,20,20,0.9);
+      color: white;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    #sidebar h2 {
+      margin: 0 0 8px 0;
+      font-size: 22px;
+    }
+
+    #sidebar p {
+      margin: 0 0 16px 0;
+      color: #cfcfcf;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .section {
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.7;
+      margin-bottom: 10px;
+    }
+
+    .legend-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .legend-item {
+      width: 100%;
+      text-align: left;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: white;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .legend-item:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .check-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #e5e5e5;
+    }
+
+    .hint {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #aaaaaa;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 700px) {
+      #sidebar {
+        width: 280px;
+      }
     }
   </style>
 </head>
 <body oncontextmenu="return false">
+  <div id="app">
+    <button id="toggleSidebar" title="Ouvrir / fermer la légende">☰</button>
 
-  <div id="viewer">
-    <img id="map" src="map.png" alt="Carte">
+    <aside id="sidebar">
+      <h2>Carte NRP</h2>
+      <p>Molette pour zoomer, clic gauche maintenu pour déplacer, clique sur une entrée pour aller directement à un lieu.</p>
+
+      <div class="section">
+        <div class="section-title">Lieux principaux</div>
+        <div class="legend-list" id="legendList"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Filtres</div>
+        <div class="check-list">
+          <label class="check-item">
+            <input type="checkbox" id="togglePolice" checked />
+            Postes de police
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="toggleHospital" checked />
+            Hôpitaux
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="toggleMine" checked />
+            Mines
+          </label>
+        </div>
+      </div>
+
+      <div class="hint">
+        Les coordonnées ci-dessous sont des exemples. Tu devras les ajuster selon ta map.
+      </div>
+    </aside>
+
+    <div id="viewer">
+      <div id="world">
+        <img id="map" src="map.png" alt="Carte" />
+      </div>
+    </div>
+
+    <div id="tooltip" class="tooltip">
+      <div class="tooltip-title" id="tooltipTitle"></div>
+      <div class="tooltip-text" id="tooltipText"></div>
+    </div>
   </div>
 
   <script>
     const viewer = document.getElementById("viewer");
+    const world = document.getElementById("world");
     const map = document.getElementById("map");
 
-    let scale = 1;
-    let minScale = 0.4;
-    let maxScale = 5;
+    const sidebar = document.getElementById("sidebar");
+    const toggleSidebarBtn = document.getElementById("toggleSidebar");
+    const legendList = document.getElementById("legendList");
 
-    let x = 0;
-    let y = 0;
+    const tooltip = document.getElementById("tooltip");
+    const tooltipTitle = document.getElementById("tooltipTitle");
+    const tooltipText = document.getElementById("tooltipText");
+
+    let mapWidth = 0;
+    let mapHeight = 0;
+
+    let scale = 1;
+    let minScale = 0.3;
+    let maxScale = 6;
+
+    let offsetX = 0;
+    let offsetY = 0;
 
     let isDragging = false;
-    let startX = 0;
-    let startY = 0;
+    let dragStartX = 0;
+    let dragStartY = 0;
 
-    function updateTransform() {
-      map.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
+    let activeMarker = null;
+
+    // =========================
+    // ADAPTE CES COORDONNÉES
+    // x et y sont en pixels SUR l'image d'origine
+    // =========================
+    const locations = [
+      {
+        id: "mine",
+        label: "Mine",
+        category: "mine",
+        x: 1600,
+        y: 1200,
+        zoom: 2.2,
+        title: "Mine",
+        text: "Zone minière principale."
+      },
+      {
+        id: "police_1",
+        label: "Poste de Police",
+        category: "police",
+        x: 2200,
+        y: 900,
+        zoom: 2.6,
+        title: "Poste de Police",
+        text: "Commissariat principal."
+      },
+      {
+        id: "hospital_1",
+        label: "Hôpital",
+        category: "hospital",
+        x: 2600,
+        y: 1300,
+        zoom: 2.6,
+        title: "Hôpital",
+        text: "Centre hospitalier."
+      }
+    ];
+
+    function render() {
+      world.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    }
+
+    function clampScale(value) {
+      return Math.max(minScale, Math.min(maxScale, value));
+    }
+
+    function screenToWorld(screenX, screenY) {
+      return {
+        x: (screenX - offsetX) / scale,
+        y: (screenY - offsetY) / scale
+      };
+    }
+
+    function zoomAt(clientX, clientY, newScale) {
+      const rect = viewer.getBoundingClientRect();
+
+      const mouseX = clientX - rect.left;
+      const mouseY = clientY - rect.top;
+
+      const worldBefore = screenToWorld(mouseX, mouseY);
+
+      scale = clampScale(newScale);
+
+      offsetX = mouseX - worldBefore.x * scale;
+      offsetY = mouseY - worldBefore.y * scale;
+
+      render();
+      positionTooltip();
+    }
+
+    function centerOn(worldX, worldY, targetScale = scale, animate = true) {
+      targetScale = clampScale(targetScale);
+
+      const rect = viewer.getBoundingClientRect();
+
+      const targetOffsetX = rect.width / 2 - worldX * targetScale;
+      const targetOffsetY = rect.height / 2 - worldY * targetScale;
+
+      if (!animate) {
+        scale = targetScale;
+        offsetX = targetOffsetX;
+        offsetY = targetOffsetY;
+        render();
+        positionTooltip();
+        return;
+      }
+
+      const startScale = scale;
+      const startX = offsetX;
+      const startY = offsetY;
+
+      const duration = 350;
+      const startTime = performance.now();
+
+      function step(now) {
+        const t = Math.min(1, (now - startTime) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+
+        scale = startScale + (targetScale - startScale) * eased;
+        offsetX = startX + (targetOffsetX - startX) * eased;
+        offsetY = startY + (targetOffsetY - startY) * eased;
+
+        render();
+        positionTooltip();
+
+        if (t < 1) {
+          requestAnimationFrame(step);
+        }
+      }
+
+      requestAnimationFrame(step);
+    }
+
+    function createMarker(location) {
+      const marker = document.createElement("button");
+      marker.className = "marker";
+      marker.style.left = `${location.x}px`;
+      marker.style.top = `${location.y}px`;
+      marker.dataset.id = location.id;
+      marker.dataset.category = location.category;
+      marker.title = location.title;
+
+      marker.addEventListener("click", (e) => {
+        e.stopPropagation();
+        activeMarker = { element: marker, data: location };
+        openTooltip(location, marker);
+      });
+
+      world.appendChild(marker);
+      location.element = marker;
+    }
+
+    function openTooltip(location, markerEl) {
+      tooltipTitle.textContent = location.title;
+      tooltipText.textContent = location.text;
+      tooltip.style.display = "block";
+      activeMarker = { element: markerEl, data: location };
+      positionTooltip();
+    }
+
+    function closeTooltip() {
+      tooltip.style.display = "none";
+      activeMarker = null;
+    }
+
+    function positionTooltip() {
+      if (!activeMarker) return;
+
+      const markerRect = activeMarker.element.getBoundingClientRect();
+      const viewerRect = viewer.getBoundingClientRect();
+
+      const left = markerRect.left - viewerRect.left + markerRect.width / 2 + 14;
+      const top = markerRect.top - viewerRect.top - 10;
+
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top}px`;
+    }
+
+    function buildLegend() {
+      locations.forEach((loc) => {
+        const btn = document.createElement("button");
+        btn.className = "legend-item";
+        btn.textContent = loc.label;
+        btn.addEventListener("click", () => {
+          centerOn(loc.x, loc.y, loc.zoom || 2.2, true);
+          openTooltip(loc, loc.element);
+        });
+        legendList.appendChild(btn);
+      });
+    }
+
+    function applyFilters() {
+      const showPolice = document.getElementById("togglePolice").checked;
+      const showHospital = document.getElementById("toggleHospital").checked;
+      const showMine = document.getElementById("toggleMine").checked;
+
+      locations.forEach((loc) => {
+        let visible = true;
+
+        if (loc.category === "police" && !showPolice) visible = false;
+        if (loc.category === "hospital" && !showHospital) visible = false;
+        if (loc.category === "mine" && !showMine) visible = false;
+
+        loc.element.classList.toggle("hidden", !visible);
+
+        if (!visible && activeMarker && activeMarker.data.id === loc.id) {
+          closeTooltip();
+        }
+      });
+    }
+
+    function fitMapInitially() {
+      const rect = viewer.getBoundingClientRect();
+
+      const scaleX = rect.width / mapWidth;
+      const scaleY = rect.height / mapHeight;
+      scale = Math.min(scaleX, scaleY);
+
+      scale = clampScale(scale);
+
+      offsetX = (rect.width - mapWidth * scale) / 2;
+      offsetY = (rect.height - mapHeight * scale) / 2;
+
+      render();
     }
 
     map.addEventListener("load", () => {
-      updateTransform();
+      mapWidth = map.naturalWidth;
+      mapHeight = map.naturalHeight;
+
+      fitMapInitially();
+
+      locations.forEach(createMarker);
+      buildLegend();
+      applyFilters();
     });
 
     viewer.addEventListener("wheel", (e) => {
       e.preventDefault();
 
-      const zoomAmount = 0.1;
-      const oldScale = scale;
+      const factor = e.deltaY < 0 ? 1.12 : 0.88;
+      const newScale = scale * factor;
 
-      if (e.deltaY < 0) {
-        scale += zoomAmount;
-      } else {
-        scale -= zoomAmount;
-      }
-
-      scale = Math.max(minScale, Math.min(maxScale, scale));
-
-      if (scale !== oldScale) {
-        updateTransform();
-      }
+      zoomAt(e.clientX, e.clientY, newScale);
     }, { passive: false });
 
     viewer.addEventListener("mousedown", (e) => {
       if (e.button !== 0) return;
       isDragging = true;
       viewer.classList.add("dragging");
-      startX = e.clientX - x;
-      startY = e.clientY - y;
+      dragStartX = e.clientX - offsetX;
+      dragStartY = e.clientY - offsetY;
+      closeTooltip();
     });
 
     window.addEventListener("mousemove", (e) => {
       if (!isDragging) return;
-      x = e.clientX - startX;
-      y = e.clientY - startY;
-      updateTransform();
+
+      offsetX = e.clientX - dragStartX;
+      offsetY = e.clientY - dragStartY;
+
+      render();
+      positionTooltip();
     });
 
     window.addEventListener("mouseup", () => {
@@ -108,24 +538,36 @@
       viewer.classList.remove("dragging");
     });
 
-    // bloque clic droit
+    viewer.addEventListener("click", (e) => {
+      if (e.target === viewer || e.target === world || e.target === map) {
+        closeTooltip();
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      positionTooltip();
+    });
+
+    toggleSidebarBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("closed");
+    });
+
+    document.getElementById("togglePolice").addEventListener("change", applyFilters);
+    document.getElementById("toggleHospital").addEventListener("change", applyFilters);
+    document.getElementById("toggleMine").addEventListener("change", applyFilters);
+
+    // Blocages basiques
     document.addEventListener("contextmenu", (e) => e.preventDefault());
-
-    // bloque drag image
     document.addEventListener("dragstart", (e) => e.preventDefault());
-
-    // bloque quelques raccourcis basiques
     document.addEventListener("keydown", (e) => {
       if (
         e.key === "F12" ||
-        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J" || e.key === "C")) ||
-        (e.ctrlKey && e.key === "U") ||
-        (e.ctrlKey && e.key === "S")
+        (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key.toUpperCase())) ||
+        (e.ctrlKey && ["U", "S", "P"].includes(e.key.toUpperCase()))
       ) {
         e.preventDefault();
       }
     });
   </script>
-
 </body>
 </html>

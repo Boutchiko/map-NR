@@ -271,8 +271,20 @@
       <div class="tooltip-text" id="tooltipText"></div>
     </div>
   </div>
+  <div id="coords">X: 0 | Y: 0</div>
 
   <script>
+    const viewer = document.getElementById("viewer");
+    const world = document.getElementById("world");
+    const map = document.getElementById("map");
+
+    const sidebar = document.getElementById("sidebar");
+    const toggleSidebarBtn = document.getElementById("toggleSidebar");
+    const legendList = document.getElementById("legendList");
+
+    const tooltip = document.getElementById("tooltip");
+    const tooltipTitle = document.getElementById("tooltipTitle");
+    const tooltipText = document.getElementById("tooltipText");
     const coordsDisplay = document.getElementById("coords");
 
 viewer.addEventListener("mousemove", (e) => {
@@ -287,17 +299,6 @@ viewer.addEventListener("mousemove", (e) => {
   coordsDisplay.textContent =
     "X: " + Math.round(worldX) + " | Y: " + Math.round(worldY);
 });
-    const viewer = document.getElementById("viewer");
-    const world = document.getElementById("world");
-    const map = document.getElementById("map");
-
-    const sidebar = document.getElementById("sidebar");
-    const toggleSidebarBtn = document.getElementById("toggleSidebar");
-    const legendList = document.getElementById("legendList");
-
-    const tooltip = document.getElementById("tooltip");
-    const tooltipTitle = document.getElementById("tooltipTitle");
-    const tooltipText = document.getElementById("tooltipText");
 
     let mapWidth = 0;
     let mapHeight = 0;
@@ -595,6 +596,5 @@ viewer.addEventListener("mousemove", (e) => {
       }
     });
   </script>
-  <div id="coords">X: 0 | Y: 0</div>
 </body>
 </html>

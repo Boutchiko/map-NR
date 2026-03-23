@@ -6,6 +6,18 @@
   <title>Carte NRP</title>
 
   <style>
+    #coords {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  z-index: 100;
+  pointer-events: none;
+}
     html, body {
       margin: 0;
       width: 100%;
@@ -261,6 +273,20 @@
   </div>
 
   <script>
+    const coordsDisplay = document.getElementById("coords");
+
+viewer.addEventListener("mousemove", (e) => {
+  const rect = viewer.getBoundingClientRect();
+
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+
+  const worldX = (mouseX - offsetX) / scale;
+  const worldY = (mouseY - offsetY) / scale;
+
+  coordsDisplay.textContent =
+    "X: " + Math.round(worldX) + " | Y: " + Math.round(worldY);
+});
     const viewer = document.getElementById("viewer");
     const world = document.getElementById("world");
     const map = document.getElementById("map");
@@ -569,5 +595,6 @@
       }
     });
   </script>
+  <div id="coords">X: 0 | Y: 0</div>
 </body>
 </html>

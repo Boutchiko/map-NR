@@ -128,7 +128,7 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 320px;
+      width: 360px;
       max-width: calc(100vw - 70px);
       height: 100%;
       background: rgba(14, 14, 14, 0.96);
@@ -147,16 +147,23 @@
     #toggleSidebar {
       position: absolute;
       top: 14px;
-      left: 14px;
+      left: 314px;
       z-index: 40;
       border: none;
-      background: rgba(20,20,20,0.9);
+      background: rgba(20,20,20,0.95);
       color: white;
       padding: 10px 12px;
-      border-radius: 10px;
+      border-radius: 0 10px 10px 0;
       cursor: pointer;
       font-size: 18px;
       line-height: 1;
+      transition: left 0.25s ease;
+      border-left: 1px solid rgba(255,255,255,0.08);
+    }
+
+    #toggleSidebar.closed {
+      left: 14px;
+      border-radius: 10px;
     }
 
     #sidebar h2 {
@@ -168,7 +175,8 @@
       margin: 0 0 16px 0;
       color: #cfcfcf;
       font-size: 14px;
-      line-height: 1.4;
+      line-height: 1.5;
+      white-space: pre-line;
     }
 
     .section {
@@ -205,27 +213,6 @@
       background: rgba(255,255,255,0.08);
     }
 
-    .check-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .check-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      color: #e5e5e5;
-    }
-
-    .hint {
-      margin-top: 14px;
-      font-size: 12px;
-      color: #aaaaaa;
-      line-height: 1.4;
-    }
-
     #coords {
       position: absolute;
       bottom: 10px;
@@ -243,6 +230,14 @@
       #sidebar {
         width: 280px;
       }
+
+      #toggleSidebar {
+        left: 234px;
+      }
+
+      #toggleSidebar.closed {
+        left: 14px;
+      }
     }
   </style>
 </head>
@@ -252,33 +247,11 @@
 
     <aside id="sidebar">
       <h2>Carte NRP</h2>
-      <p>Molette pour zoomer, clic gauche maintenu pour déplacer, clique sur une entrée pour aller directement à un lieu.</p>
+      <p>Voici une carte réaliser par l'escouade de Izumi Okuzami, le cartographe principale étant Taro Okuwakabe, accompagné du restes de son escouades d'éclaireur : Riitchi Mizuhara, Yamakaji Edosen, Yoru Mizuki.</p>
 
       <div class="section">
         <div class="section-title">Lieux principaux</div>
         <div class="legend-list" id="legendList"></div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Filtres</div>
-        <div class="check-list">
-          <label class="check-item">
-            <input type="checkbox" id="togglePolice" checked />
-            Postes de police
-          </label>
-          <label class="check-item">
-            <input type="checkbox" id="toggleHospital" checked />
-            Hôpitaux
-          </label>
-          <label class="check-item">
-            <input type="checkbox" id="toggleMine" checked />
-            Mines
-          </label>
-        </div>
-      </div>
-
-      <div class="hint">
-        Les coordonnées sont affichées en bas à droite pour t’aider à placer les lieux.
       </div>
     </aside>
 
@@ -378,6 +351,17 @@
         text: "Centre hospitalier."
       }
     ];
+
+    function updateToggleButtonPosition() {
+      const sidebarWidth = sidebar.getBoundingClientRect().width;
+      if (sidebar.classList.contains("closed")) {
+        toggleSidebarBtn.classList.add("closed");
+        toggleSidebarBtn.style.left = "14px";
+      } else {
+        toggleSidebarBtn.classList.remove("closed");
+        toggleSidebarBtn.style.left = `${sidebarWidth - 1}px`;
+      }
+    }
 
     function render() {
       world.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
@@ -533,28 +517,6 @@
       });
     }
 
-    function applyFilters() {
-      const showPolice = document.getElementById("togglePolice").checked;
-      const showHospital = document.getElementById("toggleHospital").checked;
-      const showMine = document.getElementById("toggleMine").checked;
-
-      locations.forEach((loc) => {
-        let visible = true;
-
-        if (loc.category === "police" && !showPolice) visible = false;
-        if (loc.category === "hospital" && !showHospital) visible = false;
-        if (loc.category === "mine" && !showMine) visible = false;
-
-        if (loc.element) {
-          loc.element.classList.toggle("hidden", !visible);
-        }
-
-        if (!visible && activeMarker && activeMarker.data.id === loc.id) {
-          closeTooltip();
-        }
-      });
-    }
-
     function fitMapInitially() {
       const rect = viewer.getBoundingClientRect();
 
@@ -574,10 +536,9 @@
       mapHeight = map.naturalHeight;
 
       fitMapInitially();
-
       locations.forEach(createMarker);
       buildLegend();
-      applyFilters();
+      updateToggleButtonPosition();
     });
 
     viewer.addEventListener("mousemove", (e) => {
@@ -629,15 +590,13 @@
 
     window.addEventListener("resize", () => {
       positionTooltip();
+      updateToggleButtonPosition();
     });
 
     toggleSidebarBtn.addEventListener("click", () => {
       sidebar.classList.toggle("closed");
+      updateToggleButtonPosition();
     });
-
-    document.getElementById("togglePolice").addEventListener("change", applyFilters);
-    document.getElementById("toggleHospital").addEventListener("change", applyFilters);
-    document.getElementById("toggleMine").addEventListener("change", applyFilters);
 
     document.addEventListener("contextmenu", (e) => e.preventDefault());
     document.addEventListener("dragstart", (e) => e.preventDefault());

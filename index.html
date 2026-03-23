@@ -44,15 +44,11 @@
       left: 0;
       top: 0;
       transform-origin: 0 0;
-      will-change: transform;
     }
 
     #map {
       display: block;
       max-width: none;
-      max-height: none;
-      user-select: none;
-      -webkit-user-drag: none;
       pointer-events: none;
     }
 
@@ -63,30 +59,19 @@
       transform: translate(-50%, -50%);
       cursor: pointer;
       pointer-events: auto;
-      z-index: 5;
-      background: transparent;
-      border: none;
-      outline: none;
-      padding: 0;
       opacity: 0;
-    }
-
-    .marker.hidden {
-      display: none;
     }
 
     .tooltip {
       position: absolute;
       min-width: 180px;
       max-width: 260px;
-      background: rgba(20, 20, 20, 0.96);
+      background: rgba(20,20,20,0.96);
       border: 1px solid rgba(255,255,255,0.18);
       border-radius: 10px;
-      padding: 10px 12px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
-      z-index: 20;
+      padding: 10px;
       display: none;
-      pointer-events: none;
+      z-index: 20;
     }
 
     .tooltip::after {
@@ -94,34 +79,18 @@
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      width: 0;
-      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
     }
 
     .tooltip.arrow-bottom::after {
       bottom: -10px;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-top: 10px solid rgba(20, 20, 20, 0.96);
+      border-top: 10px solid rgba(20,20,20,0.96);
     }
 
     .tooltip.arrow-top::after {
       top: -10px;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-bottom: 10px solid rgba(20, 20, 20, 0.96);
-    }
-
-    .tooltip-title {
-      font-weight: 700;
-      margin-bottom: 6px;
-      font-size: 14px;
-    }
-
-    .tooltip-text {
-      font-size: 13px;
-      line-height: 1.4;
-      color: #ddd;
+      border-bottom: 10px solid rgba(20,20,20,0.96);
     }
 
     #sidebar {
@@ -129,15 +98,10 @@
       top: 0;
       left: 0;
       width: 360px;
-      max-width: calc(100vw - 70px);
       height: 100%;
-      background: rgba(14, 14, 14, 0.96);
-      border-right: 1px solid rgba(255,255,255,0.08);
-      z-index: 30;
-      transform: translateX(0);
-      transition: transform 0.25s ease;
-      overflow-y: auto;
-      padding: 18px 14px 18px 14px;
+      background: rgba(14,14,14,0.96);
+      padding: 18px;
+      transition: transform 0.25s;
     }
 
     #sidebar.closed {
@@ -147,70 +111,56 @@
     #toggleSidebar {
       position: absolute;
       top: 14px;
-      left: 314px;
-      z-index: 40;
-      border: none;
-      background: rgba(20,20,20,0.95);
+      left: 359px;
+      background: #111;
       color: white;
-      padding: 10px 12px;
-      border-radius: 0 10px 10px 0;
+      border: none;
+      padding: 10px;
       cursor: pointer;
-      font-size: 18px;
-      line-height: 1;
-      transition: left 0.25s ease;
-      border-left: 1px solid rgba(255,255,255,0.08);
     }
 
     #toggleSidebar.closed {
       left: 14px;
-      border-radius: 10px;
     }
 
-    #sidebar h2 {
-      margin: 0 0 8px 0;
-      font-size: 22px;
-    }
-
-    #sidebar p {
-      margin: 0 0 16px 0;
-      color: #cfcfcf;
-      font-size: 14px;
-      line-height: 1.5;
-      white-space: pre-line;
-    }
-
-    .section {
-      margin-bottom: 18px;
-    }
-
-    .section-title {
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      opacity: 0.7;
-      margin-bottom: 10px;
-    }
-
-    .legend-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    h2 {
+      margin-top: 0;
     }
 
     .legend-item {
+      display: block;
       width: 100%;
-      text-align: left;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
+      padding: 10px;
+      margin-bottom: 8px;
+      background: #222;
+      border: none;
       color: white;
-      padding: 10px 12px;
-      border-radius: 10px;
       cursor: pointer;
-      font-size: 14px;
     }
 
-    .legend-item:hover {
-      background: rgba(255,255,255,0.08);
+    /* ===== INTRO PROPRE ===== */
+
+    .intro-block {
+      margin-bottom: 18px;
+    }
+
+    .intro-text {
+      margin: 0 0 10px 0;
+      color: #cfcfcf;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .intro-list {
+      margin: 0 0 10px 18px;
+      padding-left: 18px;
+      color: #e8e8e8;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .intro-list li {
+      margin-bottom: 6px;
     }
 
     #coords {
@@ -218,388 +168,99 @@
       bottom: 10px;
       right: 10px;
       background: rgba(0,0,0,0.8);
-      color: #fff;
       padding: 6px 10px;
       border-radius: 8px;
       font-size: 13px;
-      z-index: 100;
-      pointer-events: none;
-    }
-
-    @media (max-width: 700px) {
-      #sidebar {
-        width: 280px;
-      }
-
-      #toggleSidebar {
-        left: 234px;
-      }
-
-      #toggleSidebar.closed {
-        left: 14px;
-      }
     }
   </style>
 </head>
-<body oncontextmenu="return false">
-  <div id="app">
-    <button id="toggleSidebar" title="Ouvrir / fermer la légende">☰</button>
 
-    <aside id="sidebar">
-      <h2>Carte NRP</h2>
-      <p>Voici une carte réaliser par l'escouade de Izumi Okuzami, le cartographe principale étant Taro Okuwakabe, accompagné du restes de son escouades d'éclaireur : Riitchi Mizuhara, Yamakaji Edosen, Yoru Mizuki.</p>
+<body>
+<div id="app">
 
-      <div class="section">
-        <div class="section-title">Lieux principaux</div>
-        <div class="legend-list" id="legendList"></div>
-      </div>
-    </aside>
+<button id="toggleSidebar">☰</button>
 
-    <div id="viewer">
-      <div id="world">
-        <img id="map" src="map.png" alt="Carte" />
-      </div>
-    </div>
+<aside id="sidebar">
+  <h2>Carte NRP</h2>
 
-    <div id="tooltip" class="tooltip">
-      <div class="tooltip-title" id="tooltipTitle"></div>
-      <div class="tooltip-text" id="tooltipText"></div>
-    </div>
+  <div class="intro-block">
+    <p class="intro-text">
+      Voici une carte réalisée par l'escouade de Izumi Okuzami.
+    </p>
 
-    <div id="coords">X: 0 | Y: 0</div>
+    <p class="intro-text">
+      Le cartographe principal est <strong>Taro Okuwakabe</strong>, accompagné du reste de son escouade d'éclaireurs :
+    </p>
+
+    <ul class="intro-list">
+      <li>Riitchi Mizuhara</li>
+      <li>Yamakaji Edosen</li>
+      <li>Yoru Mizuki</li>
+    </ul>
   </div>
 
-  <script>
-    const viewer = document.getElementById("viewer");
-    const world = document.getElementById("world");
-    const map = document.getElementById("map");
+  <div id="legendList"></div>
+</aside>
 
-    const sidebar = document.getElementById("sidebar");
-    const toggleSidebarBtn = document.getElementById("toggleSidebar");
-    const legendList = document.getElementById("legendList");
+<div id="viewer">
+  <div id="world">
+    <img id="map" src="map.png">
+  </div>
+</div>
 
-    const tooltip = document.getElementById("tooltip");
-    const tooltipTitle = document.getElementById("tooltipTitle");
-    const tooltipText = document.getElementById("tooltipText");
-    const coordsDisplay = document.getElementById("coords");
+<div id="tooltip" class="tooltip"></div>
+<div id="coords">X: 0 | Y: 0</div>
 
-    let mapWidth = 0;
-    let mapHeight = 0;
+</div>
 
-    let scale = 1;
-    let minScale = 0.3;
-    let maxScale = 6;
+<script>
+const viewer = document.getElementById("viewer");
+const world = document.getElementById("world");
+const map = document.getElementById("map");
+const coordsDisplay = document.getElementById("coords");
+const tooltip = document.getElementById("tooltip");
 
-    let offsetX = 0;
-    let offsetY = 0;
+let scale = 1;
+let offsetX = 0;
+let offsetY = 0;
 
-    let isDragging = false;
-    let dragStartX = 0;
-    let dragStartY = 0;
+viewer.addEventListener("mousemove", (e) => {
+  const rect = viewer.getBoundingClientRect();
+  const x = (e.clientX - rect.left - offsetX) / scale;
+  const y = (e.clientY - rect.top - offsetY) / scale;
+  coordsDisplay.textContent = `X: ${Math.round(x)} | Y: ${Math.round(y)}`;
+});
 
-    let activeMarker = null;
+viewer.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  scale *= factor;
+  world.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+});
 
-    const locations = [
-      {
-        id: "mine",
-        label: "Mine",
-        category: "mine",
-        x: 2793,
-        y: 1828,
-        zoom: 2.2,
-        title: "Mine",
-        text: "Zone minière principale."
-      },
-      {
-        id: "palais",
-        label: "Palais",
-        category: "palais",
-        x: 3616,
-        y: 1730,
-        zoom: 2.2,
-        title: "Palais",
-        text: "Palais du Kazekage"
-      },
-      {
-        id: "place",
-        label: "Place Centrale",
-        category: "place",
-        x: 3623,
-        y: 1792,
-        zoom: 2.2,
-        title: "Place Centrale",
-        text: "Place"
-      },
-      {
-        id: "police_1",
-        label: "Poste de Police",
-        category: "police",
-        x: 3723,
-        y: 1711,
-        zoom: 2.2,
-        title: "Poste de Police",
-        text: "Commissariat principal."
-      },
-      {
-        id: "hospital_1",
-        label: "Hôpital",
-        category: "hospital",
-        x: 3686,
-        y: 1851,
-        zoom: 2.2,
-        title: "Hôpital",
-        text: "Centre hospitalier."
-      }
-    ];
+let dragging = false;
 
-    function updateToggleButtonPosition() {
-      const sidebarWidth = sidebar.getBoundingClientRect().width;
-      if (sidebar.classList.contains("closed")) {
-        toggleSidebarBtn.classList.add("closed");
-        toggleSidebarBtn.style.left = "14px";
-      } else {
-        toggleSidebarBtn.classList.remove("closed");
-        toggleSidebarBtn.style.left = `${sidebarWidth - 1}px`;
-      }
-    }
+viewer.addEventListener("mousedown", (e) => {
+  dragging = true;
+});
 
-    function render() {
-      world.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-    }
+window.addEventListener("mouseup", () => dragging = false);
 
-    function clampScale(value) {
-      return Math.max(minScale, Math.min(maxScale, value));
-    }
+window.addEventListener("mousemove", (e) => {
+  if (!dragging) return;
+  offsetX += e.movementX;
+  offsetY += e.movementY;
+  world.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+});
 
-    function screenToWorld(screenX, screenY) {
-      return {
-        x: (screenX - offsetX) / scale,
-        y: (screenY - offsetY) / scale
-      };
-    }
+const sidebar = document.getElementById("sidebar");
+const btn = document.getElementById("toggleSidebar");
 
-    function zoomAt(clientX, clientY, newScale) {
-      const rect = viewer.getBoundingClientRect();
+btn.onclick = () => {
+  sidebar.classList.toggle("closed");
+  btn.classList.toggle("closed");
+};
+</script>
 
-      const mouseX = clientX - rect.left;
-      const mouseY = clientY - rect.top;
-
-      const worldBefore = screenToWorld(mouseX, mouseY);
-
-      scale = clampScale(newScale);
-      offsetX = mouseX - worldBefore.x * scale;
-      offsetY = mouseY - worldBefore.y * scale;
-
-      render();
-      positionTooltip();
-    }
-
-    function centerOn(worldX, worldY, targetScale = scale, animate = true) {
-      targetScale = clampScale(targetScale);
-
-      const rect = viewer.getBoundingClientRect();
-
-      const targetOffsetX = rect.width / 2 - worldX * targetScale;
-      const targetOffsetY = rect.height / 2 - worldY * targetScale;
-
-      if (!animate) {
-        scale = targetScale;
-        offsetX = targetOffsetX;
-        offsetY = targetOffsetY;
-        render();
-        positionTooltip();
-        return;
-      }
-
-      const startScale = scale;
-      const startX = offsetX;
-      const startY = offsetY;
-
-      const duration = 350;
-      const startTime = performance.now();
-
-      function step(now) {
-        const t = Math.min(1, (now - startTime) / duration);
-        const eased = 1 - Math.pow(1 - t, 3);
-
-        scale = startScale + (targetScale - startScale) * eased;
-        offsetX = startX + (targetOffsetX - startX) * eased;
-        offsetY = startY + (targetOffsetY - startY) * eased;
-
-        render();
-        positionTooltip();
-
-        if (t < 1) requestAnimationFrame(step);
-      }
-
-      requestAnimationFrame(step);
-    }
-
-    function createMarker(location) {
-      const marker = document.createElement("button");
-      marker.className = "marker";
-      marker.style.left = `${location.x}px`;
-      marker.style.top = `${location.y}px`;
-      marker.dataset.id = location.id;
-      marker.dataset.category = location.category;
-      marker.title = location.title;
-
-      marker.addEventListener("click", (e) => {
-        e.stopPropagation();
-        activeMarker = { element: marker, data: location };
-        openTooltip(location, marker);
-      });
-
-      world.appendChild(marker);
-      location.element = marker;
-    }
-
-    function openTooltip(location, markerEl) {
-      tooltipTitle.textContent = location.title;
-      tooltipText.textContent = location.text;
-      tooltip.style.display = "block";
-      activeMarker = { element: markerEl, data: location };
-      positionTooltip();
-    }
-
-    function closeTooltip() {
-      tooltip.style.display = "none";
-      tooltip.classList.remove("arrow-top", "arrow-bottom");
-      activeMarker = null;
-    }
-
-    function positionTooltip() {
-      if (!activeMarker) return;
-
-      const markerRect = activeMarker.element.getBoundingClientRect();
-      const viewerRect = viewer.getBoundingClientRect();
-
-      tooltip.classList.remove("arrow-top", "arrow-bottom");
-      tooltip.style.left = "0px";
-      tooltip.style.top = "0px";
-
-      const tooltipRect = tooltip.getBoundingClientRect();
-
-      const pointX = markerRect.left - viewerRect.left + markerRect.width / 2;
-      const pointY = markerRect.top - viewerRect.top + markerRect.height / 2;
-
-      let left = pointX - tooltipRect.width / 2;
-      let top = pointY - tooltipRect.height - 18;
-
-      if (left < 10) left = 10;
-      if (left + tooltipRect.width > viewerRect.width - 10) {
-        left = viewerRect.width - tooltipRect.width - 10;
-      }
-
-      if (top < 10) {
-        top = pointY + 18;
-        tooltip.classList.add("arrow-top");
-      } else {
-        tooltip.classList.add("arrow-bottom");
-      }
-
-      tooltip.style.left = `${left}px`;
-      tooltip.style.top = `${top}px`;
-    }
-
-    function buildLegend() {
-      locations.forEach((loc) => {
-        const btn = document.createElement("button");
-        btn.className = "legend-item";
-        btn.textContent = loc.label;
-        btn.addEventListener("click", () => {
-          centerOn(loc.x, loc.y, loc.zoom || 2.2, true);
-          setTimeout(() => {
-            openTooltip(loc, loc.element);
-          }, 220);
-        });
-        legendList.appendChild(btn);
-      });
-    }
-
-    function fitMapInitially() {
-      const rect = viewer.getBoundingClientRect();
-
-      const scaleX = rect.width / mapWidth;
-      const scaleY = rect.height / mapHeight;
-      scale = Math.min(scaleX, scaleY);
-      scale = clampScale(scale);
-
-      offsetX = (rect.width - mapWidth * scale) / 2;
-      offsetY = (rect.height - mapHeight * scale) / 2;
-
-      render();
-    }
-
-    map.addEventListener("load", () => {
-      mapWidth = map.naturalWidth;
-      mapHeight = map.naturalHeight;
-
-      fitMapInitially();
-      locations.forEach(createMarker);
-      buildLegend();
-      updateToggleButtonPosition();
-    });
-
-    viewer.addEventListener("mousemove", (e) => {
-      const rect = viewer.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      const worldX = (mouseX - offsetX) / scale;
-      const worldY = (mouseY - offsetY) / scale;
-
-      coordsDisplay.textContent = `X: ${Math.round(worldX)} | Y: ${Math.round(worldY)}`;
-    });
-
-    viewer.addEventListener("wheel", (e) => {
-      e.preventDefault();
-      const factor = e.deltaY < 0 ? 1.12 : 0.88;
-      zoomAt(e.clientX, e.clientY, scale * factor);
-    }, { passive: false });
-
-    viewer.addEventListener("mousedown", (e) => {
-      if (e.button !== 0) return;
-      isDragging = true;
-      viewer.classList.add("dragging");
-      dragStartX = e.clientX - offsetX;
-      dragStartY = e.clientY - offsetY;
-      closeTooltip();
-    });
-
-    window.addEventListener("mousemove", (e) => {
-      if (!isDragging) return;
-
-      offsetX = e.clientX - dragStartX;
-      offsetY = e.clientY - dragStartY;
-
-      render();
-      positionTooltip();
-    });
-
-    window.addEventListener("mouseup", () => {
-      isDragging = false;
-      viewer.classList.remove("dragging");
-    });
-
-    viewer.addEventListener("click", (e) => {
-      if (e.target === viewer || e.target === world || e.target === map) {
-        closeTooltip();
-      }
-    });
-
-    window.addEventListener("resize", () => {
-      positionTooltip();
-      updateToggleButtonPosition();
-    });
-
-    toggleSidebarBtn.addEventListener("click", () => {
-      sidebar.classList.toggle("closed");
-      updateToggleButtonPosition();
-    });
-
-    document.addEventListener("contextmenu", (e) => e.preventDefault());
-    document.addEventListener("dragstart", (e) => e.preventDefault());
-  </script>
 </body>
 </html>

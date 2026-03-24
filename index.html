@@ -57,6 +57,7 @@
       user-select: none;
       -webkit-user-drag: none;
       pointer-events: none;
+      image-rendering: auto;
     }
 
     .marker {
@@ -125,6 +126,7 @@
       font-size: 13px;
       line-height: 1.4;
       color: #ddd;
+      white-space: pre-line;
     }
 
     #sidebar {
@@ -369,6 +371,8 @@
       },
       {
         id: "arene1",
+        group: "arene",
+        groupLabel: "Arène",
         label: "Arène académie",
         x: 3451,
         y: 1757,
@@ -411,7 +415,30 @@
       return Math.max(minScale, Math.min(maxScale, value));
     }
 
+    function clampOffsets() {
+      const rect = viewer.getBoundingClientRect();
+      const scaledWidth = mapWidth * scale;
+      const scaledHeight = mapHeight * scale;
+
+      if (scaledWidth <= rect.width) {
+        offsetX = (rect.width - scaledWidth) / 2;
+      } else {
+        const minX = rect.width - scaledWidth;
+        const maxX = 0;
+        offsetX = Math.max(minX, Math.min(maxX, offsetX));
+      }
+
+      if (scaledHeight <= rect.height) {
+        offsetY = (rect.height - scaledHeight) / 2;
+      } else {
+        const minY = rect.height - scaledHeight;
+        const maxY = 0;
+        offsetY = Math.max(minY, Math.min(maxY, offsetY));
+      }
+    }
+
     function render() {
+      clampOffsets();
       world.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
     }
 
@@ -497,7 +524,7 @@
 
     function openTooltip(location, markerEl) {
       tooltipTitle.textContent = location.title;
-      tooltipText.textContent = location.text;
+      tooltipText.textContent = location.text || "";
       tooltip.style.display = "block";
       activeMarker = { element: markerEl, data: location };
       positionTooltip();
@@ -543,21 +570,71 @@
       tooltip.style.top = `${top}px`;
     }
 
-    function buildLegend() {
-      legendList.innerHTML = "";
+    function getLegendEntries() {
+      const entries = [];
+      const grouped = new Map();
 
       locations.forEach((loc) => {
+        if (loc.group) {
+          if (!grouped.has(loc.group)) {
+            const groupEntry = {
+              type: "group",
+              key: loc.group,
+              label: loc.groupLabel || loc.label,
+              items: [],
+              currentIndex: 0
+            };
+            grouped.set(loc.group, groupEntry);
+            entries.push(groupEntry);
+          }
+
+          grouped.get(loc.group).items.push(loc);
+        } else {
+          entries.push({
+            type: "single",
+            item: loc
+          });
+        }
+      });
+
+      return entries;
+    }
+
+    function buildLegend() {
+      legendList.innerHTML = "";
+      const entries = getLegendEntries();
+
+      entries.forEach((entry) => {
         const btn = document.createElement("button");
         btn.className = "legend-item";
-        btn.textContent = loc.label;
 
-        btn.addEventListener("click", () => {
-          centerOn(loc.x, loc.y, loc.zoom || 2.2, true);
+        if (entry.type === "single") {
+          btn.textContent = entry.item.label;
 
-          setTimeout(() => {
-            openTooltip(loc, loc.element);
-          }, 220);
-        });
+          btn.addEventListener("click", () => {
+            centerOn(entry.item.x, entry.item.y, entry.item.zoom || 2.2, true);
+
+            setTimeout(() => {
+              openTooltip(entry.item, entry.item.element);
+            }, 220);
+          });
+        }
+
+        if (entry.type === "group") {
+          btn.textContent = entry.label;
+
+          btn.addEventListener("click", () => {
+            const loc = entry.items[entry.currentIndex];
+
+            centerOn(loc.x, loc.y, loc.zoom || 2.2, true);
+
+            setTimeout(() => {
+              openTooltip(loc, loc.element);
+            }, 220);
+
+            entry.currentIndex = (entry.currentIndex + 1) % entry.items.length;
+          });
+        }
 
         legendList.appendChild(btn);
       });
@@ -648,6 +725,7 @@
     });
 
     window.addEventListener("resize", () => {
+      render();
       positionTooltip();
       updateToggleButtonPosition();
     });

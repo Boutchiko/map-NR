@@ -50,8 +50,8 @@
 
     #map {
       display: block;
-      width: 8192px;
-      height: 8199px;
+      width: 7547.5306px;
+      height: 4029.0498px;
       max-width: none;
       max-height: none;
       user-select: none;
@@ -310,14 +310,14 @@
     const tooltipText = document.getElementById("tooltipText");
     const coordsDisplay = document.getElementById("coords");
 
-    const SVG_VIEWBOX_WIDTH = 8192;
-    const SVG_VIEWBOX_HEIGHT = 8199;
+    const SVG_VIEWBOX_WIDTH = 7547.5306;
+    const SVG_VIEWBOX_HEIGHT = 4029.0498;
 
     let mapWidth = SVG_VIEWBOX_WIDTH;
     let mapHeight = SVG_VIEWBOX_HEIGHT;
 
     let scale = 1;
-    let minScale = 0.08;
+    let minScale = 0.12;
     let maxScale = 8;
 
     let offsetX = 0;
@@ -328,6 +328,7 @@
     let dragStartY = 0;
 
     let activeMarker = null;
+    let markersCreated = false;
 
     const locations = [
       {
@@ -409,8 +410,8 @@
       const mouseY = clientY - rect.top;
 
       const worldBefore = screenToWorld(mouseX, mouseY);
-      scale = clampScale(newScale);
 
+      scale = clampScale(newScale);
       offsetX = mouseX - worldBefore.x * scale;
       offsetY = mouseY - worldBefore.y * scale;
 
@@ -557,20 +558,23 @@
       render();
     }
 
+    function createMarkersOnce() {
+      if (markersCreated) return;
+      locations.forEach(createMarker);
+      markersCreated = true;
+    }
+
     function initializeMap() {
       mapWidth = SVG_VIEWBOX_WIDTH;
       mapHeight = SVG_VIEWBOX_HEIGHT;
 
       fitMapInitially();
-
-      locations.forEach(createMarker);
+      createMarkersOnce();
       buildLegend();
       updateToggleButtonPosition();
     }
 
-    map.addEventListener("load", () => {
-      initializeMap();
-    });
+    map.addEventListener("load", initializeMap);
 
     map.addEventListener("error", () => {
       console.error("Impossible de charger cartographie-nrp.svg");

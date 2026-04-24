@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Carte NRP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 
   <style>
     html, body {
@@ -12,13 +13,11 @@
       height: 100%;
       overflow: hidden;
       background: #0b0b0b;
-      font-family: Arial, sans-serif;
+      font-family: 'Crimson Text', Georgia, serif;
       color: white;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     #app {
       width: 100vw;
@@ -36,58 +35,74 @@
       touch-action: none;
     }
 
-    #viewer.dragging {
-      cursor: grabbing;
-    }
+    #viewer.dragging { cursor: grabbing; }
 
     #world {
       position: absolute;
-      left: 0;
-      top: 0;
+      left: 0; top: 0;
       transform-origin: 0 0;
       will-change: transform;
+    }
+
+    /* ── Overlay canvas for country borders ── */
+    #borderCanvas {
+      position: absolute;
+      left: 0; top: 0;
+      pointer-events: none;
+      z-index: 2;
     }
 
     #map {
       display: block;
       width: 7547.5306px;
       height: 4029.0498px;
-      max-width: none;
-      max-height: none;
+      max-width: none; max-height: none;
       user-select: none;
       -webkit-user-drag: none;
       pointer-events: none;
       image-rendering: auto;
+      position: relative;
+      z-index: 1;
     }
 
+    /* ── Markers ── */
     .marker {
       position: absolute;
-      width: 34px;
-      height: 34px;
+      width: 28px; height: 28px;
       transform: translate(-50%, -50%);
       cursor: pointer;
       pointer-events: auto;
       z-index: 5;
-      background: transparent;
-      border: none;
-      outline: none;
-      padding: 0;
-      opacity: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.6);
+      transition: transform 0.15s, box-shadow 0.15s;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
     }
 
-    .marker.hidden {
-      display: none;
+    .marker:hover {
+      transform: translate(-50%, -50%) scale(1.3);
+      box-shadow: 0 0 12px currentColor;
     }
 
+    .marker.hidden { display: none; }
+
+    /* Country-based marker colors */
+    .marker[data-country="vent"]   { background: rgba(210,160,50,0.85); border-color: #f0c040; color: #3a2800; }
+    .marker[data-country="feu"]    { background: rgba(200,60,40,0.85);  border-color: #ff6040; color: #3a0000; }
+    .marker[data-country="neutre"] { background: rgba(80,140,200,0.85); border-color: #80c0ff; color: #001830; }
+    .marker[data-country="cerisiers"] { background: rgba(220,120,160,0.85); border-color: #ffaad0; color: #3a0020; }
+    .marker[data-country="roche"] { background: rgba(120,100,80,0.85);  border-color: #c0a870; color: #1a1000; }
+
+    /* ── Tooltip ── */
     .tooltip {
       position: absolute;
-      min-width: 180px;
-      max-width: 280px;
-      background: rgba(20, 20, 20, 0.96);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 10px;
-      padding: 10px 12px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+      min-width: 180px; max-width: 300px;
+      background: rgba(10, 8, 5, 0.97);
+      border: 1px solid rgba(255,220,100,0.3);
+      border-radius: 8px;
+      padding: 12px 14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,220,100,0.08);
       z-index: 50;
       display: none;
       pointer-events: none;
@@ -98,160 +113,280 @@
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      width: 0;
-      height: 0;
+      width: 0; height: 0;
     }
 
     .tooltip.arrow-bottom::after {
       bottom: -10px;
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-      border-top: 10px solid rgba(20, 20, 20, 0.96);
+      border-top: 10px solid rgba(10, 8, 5, 0.97);
     }
 
     .tooltip.arrow-top::after {
       top: -10px;
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-      border-bottom: 10px solid rgba(20, 20, 20, 0.96);
+      border-bottom: 10px solid rgba(10, 8, 5, 0.97);
+    }
+
+    .tooltip-country-tag {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-family: 'Cinzel', serif;
+      opacity: 0.6;
+      margin-bottom: 4px;
     }
 
     .tooltip-title {
-      font-weight: 700;
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
       margin-bottom: 6px;
-      font-size: 14px;
+      font-size: 15px;
+      color: #f5e8c0;
     }
 
     .tooltip-text {
-      font-size: 13px;
-      line-height: 1.4;
-      color: #ddd;
+      font-size: 14px;
+      line-height: 1.45;
+      color: #ccc;
       white-space: pre-line;
     }
 
+    /* ── Sidebar ── */
     #sidebar {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 360px;
+      top: 0; left: 0;
+      width: 310px;
       max-width: calc(100vw - 70px);
       height: 100%;
-      background: rgba(14, 14, 14, 0.96);
-      border-right: 1px solid rgba(255,255,255,0.08);
+      background: rgba(8, 7, 5, 0.97);
+      border-right: 1px solid rgba(255,220,100,0.1);
       z-index: 30;
       transform: translateX(0);
       transition: transform 0.25s ease;
       overflow-y: auto;
-      padding: 18px 14px;
+      padding: 20px 14px 20px 14px;
     }
 
-    #sidebar.closed {
-      transform: translateX(-100%);
-    }
+    #sidebar::-webkit-scrollbar { width: 4px; }
+    #sidebar::-webkit-scrollbar-track { background: transparent; }
+    #sidebar::-webkit-scrollbar-thumb { background: rgba(255,220,100,0.2); border-radius: 2px; }
+
+    #sidebar.closed { transform: translateX(-100%); }
 
     #toggleSidebar {
       position: absolute;
-      top: 14px;
-      left: 359px;
+      top: 14px; left: 309px;
       z-index: 40;
       border: none;
-      background: rgba(20,20,20,0.95);
-      color: white;
+      background: rgba(8,7,5,0.97);
+      color: rgba(255,220,100,0.8);
       padding: 10px 12px;
-      border-radius: 0 10px 10px 0;
+      border-radius: 0 8px 8px 0;
       cursor: pointer;
-      font-size: 18px;
+      font-size: 16px;
       line-height: 1;
       transition: left 0.25s ease, border-radius 0.25s ease;
-      border-left: 1px solid rgba(255,255,255,0.08);
+      border-left: 1px solid rgba(255,220,100,0.1);
     }
 
     #toggleSidebar.closed {
       left: 14px;
-      border-radius: 10px;
+      border-radius: 8px;
+      border-left: 1px solid rgba(255,220,100,0.15);
     }
 
-    #sidebar h2 {
-      margin: 0 0 10px 0;
-      font-size: 22px;
+    /* ── Sidebar header ── */
+    .sidebar-header {
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255,220,100,0.12);
     }
 
-    .intro-block {
-      margin-bottom: 18px;
+    .sidebar-header h2 {
+      margin: 0 0 4px 0;
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #f5e8c0;
+      letter-spacing: 0.04em;
     }
 
     .intro-text {
-      margin: 0 0 10px 0;
-      color: #cfcfcf;
-      font-size: 14px;
-      line-height: 1.55;
+      margin: 0 0 6px 0;
+      color: #999;
+      font-size: 13px;
+      line-height: 1.5;
     }
 
+    .intro-text strong { color: #d4b870; font-weight: 600; }
+
     .intro-list {
-      margin: 0 0 12px 18px;
-      padding-left: 18px;
-      color: #e8e8e8;
-      font-size: 14px;
+      margin: 6px 0 0 14px;
+      padding-left: 12px;
+      color: #aaa;
+      font-size: 13px;
       line-height: 1.6;
     }
 
-    .intro-list li {
-      margin-bottom: 6px;
+    /* ── Border toggle section ── */
+    .border-toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 8px 10px;
+      background: rgba(255,220,100,0.04);
+      border: 1px solid rgba(255,220,100,0.1);
+      border-radius: 8px;
     }
 
-    .section {
-      margin-bottom: 18px;
-    }
-
-    .section-title {
+    .border-toggle-row label {
       font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      opacity: 0.7;
+      color: #ccc;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .border-toggle-row input[type=checkbox] {
+      accent-color: #d4b870;
+      width: 14px; height: 14px;
+      cursor: pointer;
+    }
+
+    /* ── Country sections ── */
+    .country-section {
       margin-bottom: 10px;
     }
 
-    .legend-list {
+    .country-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+
+    .country-header:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .country-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .country-name {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      font-weight: 600;
+      flex: 1;
+      letter-spacing: 0.03em;
+    }
+
+    .country-arrow {
+      font-size: 11px;
+      opacity: 0.5;
+      transition: transform 0.2s;
+    }
+
+    .country-section.open .country-arrow {
+      transform: rotate(90deg);
+    }
+
+    /* Country color theming */
+    .country-section[data-country="vent"] .country-header  { border-color: rgba(240,192,64,0.2); }
+    .country-section[data-country="vent"] .country-dot     { background: #f0c040; }
+    .country-section[data-country="vent"] .country-name    { color: #f0c040; }
+
+    .country-section[data-country="feu"] .country-header   { border-color: rgba(255,96,64,0.2); }
+    .country-section[data-country="feu"] .country-dot      { background: #ff6040; }
+    .country-section[data-country="feu"] .country-name     { color: #ff8060; }
+
+    .country-section[data-country="neutre"] .country-header  { border-color: rgba(128,192,255,0.2); }
+    .country-section[data-country="neutre"] .country-dot     { background: #80c0ff; }
+    .country-section[data-country="neutre"] .country-name    { color: #80c0ff; }
+
+    .country-section[data-country="cerisiers"] .country-header { border-color: rgba(255,170,208,0.2); }
+    .country-section[data-country="cerisiers"] .country-dot    { background: #ffaad0; }
+    .country-section[data-country="cerisiers"] .country-name   { color: #ffaad0; }
+
+    .country-section[data-country="roche"] .country-header { border-color: rgba(192,168,112,0.2); }
+    .country-section[data-country="roche"] .country-dot    { background: #c0a870; }
+    .country-section[data-country="roche"] .country-name   { color: #c0a870; }
+
+    /* ── Location list inside a country section ── */
+    .country-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease;
+      padding-left: 8px;
+    }
+
+    .country-section.open .country-body {
+      max-height: 1000px;
+    }
+
+    .location-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
+      padding: 6px 0 10px 6px;
     }
 
     .legend-item {
       width: 100%;
       text-align: left;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-      color: white;
-      padding: 10px 12px;
-      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      color: #ccc;
+      padding: 8px 10px;
+      border-radius: 7px;
       cursor: pointer;
-      font-size: 14px;
-      transition: background 0.15s ease, border-color 0.15s ease;
+      font-size: 13.5px;
+      font-family: 'Crimson Text', Georgia, serif;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-item-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      opacity: 0.8;
     }
 
     .legend-item:hover {
-      background: rgba(255,255,255,0.08);
-      border-color: rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.12);
+      color: #fff;
     }
 
+    /* ── Coords ── */
     #coords {
       position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.8);
-      color: #fff;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 13px;
+      bottom: 10px; right: 10px;
+      background: rgba(0,0,0,0.75);
+      color: rgba(255,220,100,0.6);
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: monospace;
       z-index: 100;
       pointer-events: none;
     }
 
     @media (max-width: 700px) {
-      #sidebar {
-        width: 280px;
-      }
+      #sidebar { width: 260px; }
     }
   </style>
 </head>
@@ -260,17 +395,12 @@
     <button id="toggleSidebar" title="Ouvrir / fermer la légende">☰</button>
 
     <aside id="sidebar">
-      <h2>Carte NRP</h2>
-
-      <div class="intro-block">
+      <div class="sidebar-header">
+        <h2>Carte NRP</h2>
         <p class="intro-text">
-          Voici une carte réalisée par l'escouade de <strong>Izumi Okuzami</strong>.
+          Réalisée par l'escouade de <strong>Izumi Okuzami</strong>.<br>
+          Cartographe : <strong>Taro Okuwakabe</strong>
         </p>
-
-        <p class="intro-text">
-          Le cartographe étant <strong>Taro Okuwakabe</strong>, accompagné du reste de son escouade d'éclaireurs :
-        </p>
-
         <ul class="intro-list">
           <li>Riitchi Mizuhara</li>
           <li>Yamakaji Edosen</li>
@@ -278,19 +408,25 @@
         </ul>
       </div>
 
-      <div class="section">
-        <div class="section-title">Lieux principaux</div>
-        <div class="legend-list" id="legendList"></div>
+      <!-- Toggle borders -->
+      <div class="border-toggle-row">
+        <input type="checkbox" id="showBorders" checked />
+        <label for="showBorders">Afficher les frontières</label>
       </div>
+
+      <!-- Country sections injected by JS -->
+      <div id="countrySections"></div>
     </aside>
 
     <div id="viewer">
       <div id="world">
         <img id="map" src="cartographie-nrp.svg" alt="Carte NRP" draggable="false" />
+        <canvas id="borderCanvas"></canvas>
       </div>
     </div>
 
     <div id="tooltip" class="tooltip">
+      <div class="tooltip-country-tag" id="tooltipCountry"></div>
       <div class="tooltip-title" id="tooltipTitle"></div>
       <div class="tooltip-text" id="tooltipText"></div>
     </div>
@@ -299,250 +435,333 @@
   </div>
 
   <script>
-    const viewer = document.getElementById("viewer");
-    const world = document.getElementById("world");
-    const map = document.getElementById("map");
+    // ════════════════════════════════════════════
+    //  CONFIG
+    // ════════════════════════════════════════════
+    const SVG_W = 7547.5306;
+    const SVG_H = 4029.0498;
 
-    const sidebar = document.getElementById("sidebar");
-    const toggleSidebarBtn = document.getElementById("toggleSidebar");
-    const legendList = document.getElementById("legendList");
+    // ── Country definitions ──────────────────────
+    // Each country has a name, a color, and a list
+    // of polygon points (in SVG map coords) for the
+    // border overlay.  Edit these polygons to match
+    // your actual map borders!
+    const COUNTRIES = {
+      vent: {
+        label: "Pays du Vent",
+        color: "#f0c040",
+        fillAlpha: 0.06,
+        // Rough bounding polygon — replace with real coordinates!
+        polygon: [
+          [1800, 800], [5200, 800], [5400, 1200],
+          [5200, 3200], [4600, 3600], [3200, 3800],
+          [1600, 3400], [1400, 2000], [1800, 800]
+        ]
+      },
+      feu: {
+        label: "Pays du Feu",
+        color: "#ff6040",
+        fillAlpha: 0.06,
+        polygon: [
+          [5200, 800], [7200, 600], [7400, 1600],
+          [7200, 3200], [5800, 3600], [5200, 3200],
+          [5400, 1200], [5200, 800]
+        ]
+      },
+      neutre: {
+        label: "Pays Neutre",
+        color: "#80c0ff",
+        fillAlpha: 0.05,
+        polygon: [
+          [200, 400], [1800, 800], [1400, 2000],
+          [1600, 3400], [400, 3600], [100, 2000],
+          [200, 400]
+        ]
+      },
+      cerisiers: {
+        label: "Pays des Cerisiers",
+        color: "#ffaad0",
+        fillAlpha: 0.07,
+        polygon: [
+          [200, 400], [1000, 300], [1400, 800],
+          [1200, 1600], [600, 1800], [100, 1200],
+          [200, 400]
+        ]
+      },
+      roche: {
+        label: "Pays de la Roche",
+        color: "#c0a870",
+        fillAlpha: 0.07,
+        polygon: [
+          [400, 1800], [1200, 1600], [1600, 3400],
+          [800, 3600], [200, 3000], [400, 1800]
+        ]
+      }
+    };
 
-    const tooltip = document.getElementById("tooltip");
-    const tooltipTitle = document.getElementById("tooltipTitle");
-    const tooltipText = document.getElementById("tooltipText");
-    const coordsDisplay = document.getElementById("coords");
-
-    const SVG_VIEWBOX_WIDTH = 7547.5306;
-    const SVG_VIEWBOX_HEIGHT = 4029.0498;
-
-    let mapWidth = SVG_VIEWBOX_WIDTH;
-    let mapHeight = SVG_VIEWBOX_HEIGHT;
-
-    let scale = 1;
-    let minScale = 0.12;
-    let maxScale = 8;
-
-    let offsetX = 0;
-    let offsetY = 0;
-
-    let isDragging = false;
-    let dragStartX = 0;
-    let dragStartY = 0;
-
-    let activeMarker = null;
-    let markersCreated = false;
-
+    // ── Locations ────────────────────────────────
+    // Add  country: "vent"|"feu"|"neutre"|"cerisiers"|"roche"
+    // to each location.
     const locations = [
+      // ── Pays du Vent ──────────────────────
       {
-        id: "palais",
+        id: "palais", country: "vent",
         label: "Palais",
-        x: 3659,
-        y: 1728,
-        zoom: 2.5,
+        x: 3659, y: 1728, zoom: 2.5,
         title: "Palais",
         text: "Palais du Kazekage."
       },
       {
-        id: "place",
+        id: "place", country: "vent",
         label: "Place Centrale",
-        x: 3665,
-        y: 1791,
-        zoom: 2.5,
+        x: 3665, y: 1791, zoom: 2.5,
         title: "Place Centrale",
         text: "Place centrale du village."
       },
       {
-        id: "police_1",
+        id: "police_1", country: "vent",
         label: "Poste de Police",
-        x: 3749,
-        y: 1717,
-        zoom: 2.5,
+        x: 3749, y: 1717, zoom: 2.5,
         title: "Poste de Police",
         text: "Commissariat principal."
       },
       {
-        id: "hospital_1",
+        id: "hospital_1", country: "vent",
         label: "Hôpital",
-        x: 3726,
-        y: 1847,
-        zoom: 2.5,
+        x: 3726, y: 1847, zoom: 2.5,
         title: "Hôpital",
         text: "Centre hospitalier."
       },
       {
-        id: "dojo",
+        id: "dojo", country: "vent",
         label: "Dojo",
-        x: 3431,
-        y: 1641,
-        zoom: 2.5,
+        x: 3431, y: 1641, zoom: 2.5,
         title: "Dojo",
         text: "Dojo de Taijutsu"
       },
       {
-        id: "arene1",
-        group: "arene",
-        groupLabel: "Arène",
+        id: "arene1", country: "vent",
+        group: "arene", groupLabel: "Arène",
         label: "Arène académique",
-        x: 3451,
-        y: 1752,
-        zoom: 2.5,
+        x: 3451, y: 1752, zoom: 2.5,
         title: "Arène académie",
         text: "Arène d'entrainement"
       },
       {
-        id: "arene2",
-        group: "arene",
-        groupLabel: "Arène",
+        id: "arene2", country: "vent",
+        group: "arene", groupLabel: "Arène",
         label: "Arène 2",
-        x: 3449,
-        y: 1842,
-        zoom: 2.5,
+        x: 3449, y: 1842, zoom: 2.5,
         title: "Arène 2",
         text: "Arène d'entrainement"
       },
       {
-        id: "arene3",
-        group: "arene",
-        groupLabel: "Arène",
+        id: "arene3", country: "vent",
+        group: "arene", groupLabel: "Arène",
         label: "Arène 3",
-        x: 3712,
-        y: 1999,
-        zoom: 2.5,
+        x: 3712, y: 1999, zoom: 2.5,
         title: "Arène 3",
         text: "Arène d'entrainement"
       },
       {
-        id: "flag1",
-        group: "flag",
-        groupLabel: "Flag",
+        id: "flag1", country: "vent",
+        group: "flag", groupLabel: "Drapeau",
         label: "Drapeau du Pays du Vent",
-        x: 2836,
-        y: 1826,
-        zoom: 2.5,
-        title: "Drapeau",
-        text: ""
+        x: 2836, y: 1826, zoom: 2.5,
+        title: "Drapeau", text: ""
       },
       {
-        id: "flag2",
-        group: "flag",
-        groupLabel: "Flag",
+        id: "flag2", country: "vent",
+        group: "flag", groupLabel: "Drapeau",
         label: "Drapeau du Pays du Vent",
-        x: 3780,
-        y: 1195,
-        zoom: 2.5,
-        title: "Drapeau",
-        text: ""
+        x: 3780, y: 1195, zoom: 2.5,
+        title: "Drapeau", text: ""
       },
       {
-        id: "flag3",
-        group: "flag",
-        groupLabel: "Flag",
+        id: "flag3", country: "vent",
+        group: "flag", groupLabel: "Drapeau",
         label: "Drapeau du Pays du Vent",
-        x: 4139,
-        y: 2601,
-        zoom: 2.5,
-        title: "Drapeau",
-        text: ""
+        x: 4139, y: 2601, zoom: 2.5,
+        title: "Drapeau", text: ""
       },
       {
-        id: "flag4",
-        group: "flag",
-        groupLabel: "Flag",
+        id: "flag4", country: "vent",
+        group: "flag", groupLabel: "Drapeau",
         label: "Drapeau du Pays du Vent",
-        x: 4053,
-        y: 2777,
-        zoom: 2.5,
-        title: "Drapeau",
-        text: ""
+        x: 4053, y: 2777, zoom: 2.5,
+        title: "Drapeau", text: ""
       },
       {
-        id: "oasis1",
-        group: "oasis",
-        groupLabel: "Oasis",
+        id: "oasis1", country: "vent",
+        group: "oasis", groupLabel: "Oasis",
         label: "Oasis",
-        x: 3619,
-        y: 1509,
-        zoom: 2.5,
-        title: "Oasis",
-        text: ""
+        x: 3619, y: 1509, zoom: 2.5,
+        title: "Oasis", text: ""
       },
       {
-        id: "oasis2",
-        group: "oasis",
-        groupLabel: "Oasis",
+        id: "oasis2", country: "vent",
+        group: "oasis", groupLabel: "Oasis",
         label: "Oasis",
-        x: 4054,
-        y: 1307,
-        zoom: 2.5,
-        title: "Oasis",
-        text: ""
+        x: 4054, y: 1307, zoom: 2.5,
+        title: "Oasis", text: ""
       },
       {
-        id: "oasis3",
-        group: "oasis",
-        groupLabel: "Oasis",
+        id: "oasis3", country: "vent",
+        group: "oasis", groupLabel: "Oasis",
         label: "Oasis",
-        x: 2855,
-        y: 2480,
-        zoom: 2.5,
-        title: "Oasis",
-        text: ""
+        x: 2855, y: 2480, zoom: 2.5,
+        title: "Oasis", text: ""
       },
       {
-        id: "temple",
+        id: "temple", country: "vent",
         label: "Temple",
-        x: 3343,
-        y: 1443,
-        zoom: 2.5,
-        title: "Temple",
-        text: ""
+        x: 3343, y: 1443, zoom: 2.5,
+        title: "Temple", text: ""
       },
       {
-        id: "mine",
+        id: "mine", country: "vent",
         label: "Mine",
-        x: 2836,
-        y: 1826,
-        zoom: 2.5,
+        x: 2836, y: 1826, zoom: 2.5,
         title: "Mine",
         text: "Zone minière."
+      },
+
+      // ── Pays du Feu ── (exemples, à personnaliser)
+      {
+        id: "konoha", country: "feu",
+        label: "Village Caché des Feuilles",
+        x: 6200, y: 1600, zoom: 2.5,
+        title: "Village Caché des Feuilles",
+        text: "Village principal du Pays du Feu."
+      },
+      {
+        id: "feu_forteresse", country: "feu",
+        label: "Forteresse",
+        x: 6500, y: 2200, zoom: 2.5,
+        title: "Forteresse",
+        text: "Poste avancé militaire."
+      },
+
+      // ── Pays Neutre ── (exemples)
+      {
+        id: "neutre_carrefour", country: "neutre",
+        label: "Carrefour des Nations",
+        x: 900, y: 1400, zoom: 2.0,
+        title: "Carrefour des Nations",
+        text: "Zone neutre de commerce."
+      },
+
+      // ── Pays des Cerisiers ── (exemples)
+      {
+        id: "cerisiers_village", country: "cerisiers",
+        label: "Village des Cerisiers",
+        x: 700, y: 900, zoom: 2.5,
+        title: "Village des Cerisiers",
+        text: "Paisible village fleuri."
+      },
+
+      // ── Pays de la Roche ── (exemples)
+      {
+        id: "roche_mine", country: "roche",
+        label: "Grande Mine",
+        x: 900, y: 2600, zoom: 2.5,
+        title: "Grande Mine",
+        text: "Mine principale de minerai."
       }
     ];
 
-    function updateToggleButtonPosition() {
-      if (sidebar.classList.contains("closed")) {
-        toggleSidebarBtn.classList.add("closed");
-        toggleSidebarBtn.style.left = "14px";
-      } else {
-        toggleSidebarBtn.classList.remove("closed");
-        const sidebarWidth = sidebar.getBoundingClientRect().width;
-        toggleSidebarBtn.style.left = `${sidebarWidth - 1}px`;
-      }
+    // ════════════════════════════════════════════
+    //  STATE
+    // ════════════════════════════════════════════
+    const viewer  = document.getElementById("viewer");
+    const world   = document.getElementById("world");
+    const mapImg  = document.getElementById("map");
+    const canvas  = document.getElementById("borderCanvas");
+    const ctx     = canvas.getContext("2d");
+
+    const sidebar         = document.getElementById("sidebar");
+    const toggleSidebarBtn = document.getElementById("toggleSidebar");
+    const countrySections = document.getElementById("countrySections");
+
+    const tooltip        = document.getElementById("tooltip");
+    const tooltipCountry = document.getElementById("tooltipCountry");
+    const tooltipTitle   = document.getElementById("tooltipTitle");
+    const tooltipText    = document.getElementById("tooltipText");
+    const coordsDisplay  = document.getElementById("coords");
+    const showBordersChk = document.getElementById("showBorders");
+
+    let mapWidth  = SVG_W;
+    let mapHeight = SVG_H;
+    let scale     = 1;
+    let minScale  = 0.12;
+    let maxScale  = 8;
+    let offsetX   = 0;
+    let offsetY   = 0;
+    let isDragging = false;
+    let dragStartX = 0, dragStartY = 0;
+    let activeMarker   = null;
+    let markersCreated = false;
+    let showBorders    = true;
+
+    // ════════════════════════════════════════════
+    //  BORDER CANVAS
+    // ════════════════════════════════════════════
+    function resizeCanvas() {
+      canvas.width  = mapWidth;
+      canvas.height = mapHeight;
     }
 
-    function clampScale(value) {
-      return Math.max(minScale, Math.min(maxScale, value));
+    function drawBorders() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!showBorders) return;
+
+      Object.entries(COUNTRIES).forEach(([key, c]) => {
+        const pts = c.polygon;
+        if (!pts || pts.length < 3) return;
+
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let i = 1; i < pts.length; i++) {
+          ctx.lineTo(pts[i][0], pts[i][1]);
+        }
+        ctx.closePath();
+
+        // Fill
+        ctx.globalAlpha = c.fillAlpha;
+        ctx.fillStyle = c.color;
+        ctx.fill();
+
+        // Border
+        ctx.globalAlpha = 0.55;
+        ctx.strokeStyle = c.color;
+        ctx.lineWidth   = 6;
+        ctx.setLineDash([20, 10]);
+        ctx.lineDashOffset = 0;
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      });
     }
+
+    showBordersChk.addEventListener("change", () => {
+      showBorders = showBordersChk.checked;
+      drawBorders();
+    });
+
+    // ════════════════════════════════════════════
+    //  MAP TRANSFORM
+    // ════════════════════════════════════════════
+    function clampScale(v) { return Math.max(minScale, Math.min(maxScale, v)); }
 
     function clampOffsets() {
       const rect = viewer.getBoundingClientRect();
-      const scaledWidth = mapWidth * scale;
-      const scaledHeight = mapHeight * scale;
+      const sw = mapWidth * scale, sh = mapHeight * scale;
 
-      if (scaledWidth <= rect.width) {
-        offsetX = (rect.width - scaledWidth) / 2;
-      } else {
-        const minX = rect.width - scaledWidth;
-        const maxX = 0;
-        offsetX = Math.max(minX, Math.min(maxX, offsetX));
-      }
+      if (sw <= rect.width)  offsetX = (rect.width  - sw) / 2;
+      else { offsetX = Math.max(rect.width - sw, Math.min(0, offsetX)); }
 
-      if (scaledHeight <= rect.height) {
-        offsetY = (rect.height - scaledHeight) / 2;
-      } else {
-        const minY = rect.height - scaledHeight;
-        const maxY = 0;
-        offsetY = Math.max(minY, Math.min(maxY, offsetY));
-      }
+      if (sh <= rect.height) offsetY = (rect.height - sh) / 2;
+      else { offsetY = Math.max(rect.height - sh, Math.min(0, offsetY)); }
     }
 
     function render() {
@@ -550,91 +769,97 @@
       world.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
     }
 
-    function screenToWorld(screenX, screenY) {
-      return {
-        x: (screenX - offsetX) / scale,
-        y: (screenY - offsetY) / scale
-      };
+    function screenToWorld(sx, sy) {
+      return { x: (sx - offsetX) / scale, y: (sy - offsetY) / scale };
     }
 
-    function zoomAt(clientX, clientY, newScale) {
+    function zoomAt(cx, cy, newScale) {
       const rect = viewer.getBoundingClientRect();
-      const mouseX = clientX - rect.left;
-      const mouseY = clientY - rect.top;
-
-      const worldBefore = screenToWorld(mouseX, mouseY);
-
-      scale = clampScale(newScale);
-      offsetX = mouseX - worldBefore.x * scale;
-      offsetY = mouseY - worldBefore.y * scale;
-
+      const mx = cx - rect.left, my = cy - rect.top;
+      const wb = screenToWorld(mx, my);
+      scale   = clampScale(newScale);
+      offsetX = mx - wb.x * scale;
+      offsetY = my - wb.y * scale;
       render();
       positionTooltip();
     }
 
-    function centerOn(worldX, worldY, targetScale = scale, animate = true) {
+    function centerOn(wx, wy, targetScale = scale, animate = true) {
       targetScale = clampScale(targetScale);
-
       const rect = viewer.getBoundingClientRect();
-      const targetOffsetX = rect.width / 2 - worldX * targetScale;
-      const targetOffsetY = rect.height / 2 - worldY * targetScale;
+      const tx = rect.width  / 2 - wx * targetScale;
+      const ty = rect.height / 2 - wy * targetScale;
 
       if (!animate) {
-        scale = targetScale;
-        offsetX = targetOffsetX;
-        offsetY = targetOffsetY;
-        render();
-        positionTooltip();
-        return;
+        scale = targetScale; offsetX = tx; offsetY = ty;
+        render(); positionTooltip(); return;
       }
 
-      const startScale = scale;
-      const startX = offsetX;
-      const startY = offsetY;
-      const duration = 350;
-      const startTime = performance.now();
+      const s0 = scale, x0 = offsetX, y0 = offsetY;
+      const dur = 350, t0 = performance.now();
 
       function step(now) {
-        const t = Math.min(1, (now - startTime) / duration);
-        const eased = 1 - Math.pow(1 - t, 3);
-
-        scale = startScale + (targetScale - startScale) * eased;
-        offsetX = startX + (targetOffsetX - startX) * eased;
-        offsetY = startY + (targetOffsetY - startY) * eased;
-
-        render();
-        positionTooltip();
-
-        if (t < 1) {
-          requestAnimationFrame(step);
-        }
+        const t = Math.min(1, (now - t0) / dur);
+        const e = 1 - Math.pow(1 - t, 3);
+        scale = s0 + (targetScale - s0) * e;
+        offsetX = x0 + (tx - x0) * e;
+        offsetY = y0 + (ty - y0) * e;
+        render(); positionTooltip();
+        if (t < 1) requestAnimationFrame(step);
       }
-
       requestAnimationFrame(step);
     }
 
-    function createMarker(location) {
-      const marker = document.createElement("button");
-      marker.className = "marker";
-      marker.style.left = `${location.x}px`;
-      marker.style.top = `${location.y}px`;
-      marker.dataset.id = location.id;
-      marker.title = location.title;
+    // ════════════════════════════════════════════
+    //  MARKERS
+    // ════════════════════════════════════════════
+    const ICONS = {
+      palais: "🏰", place: "⛩️", police_1: "🛡️", hospital_1: "⚕️",
+      dojo: "⚔️", temple: "🕌", mine: "⛏️",
+      konoha: "🌿", feu_forteresse: "🔥",
+      neutre_carrefour: "🤝",
+      cerisiers_village: "🌸",
+      roche_mine: "🪨",
+    };
 
-      marker.addEventListener("click", (e) => {
-        e.stopPropagation();
-        openTooltip(location, marker);
-      });
-
-      world.appendChild(marker);
-      location.element = marker;
+    function getIcon(loc) {
+      if (ICONS[loc.id]) return ICONS[loc.id];
+      if (loc.group === "arene")  return "⚡";
+      if (loc.group === "flag")   return "🚩";
+      if (loc.group === "oasis")  return "💧";
+      return "📍";
     }
 
-    function openTooltip(location, markerEl) {
-      tooltipTitle.textContent = location.title;
-      tooltipText.textContent = location.text || "";
+    function createMarker(loc) {
+      const el = document.createElement("button");
+      el.className = "marker";
+      el.style.left = `${loc.x}px`;
+      el.style.top  = `${loc.y}px`;
+      el.dataset.id      = loc.id;
+      el.dataset.country = loc.country || "neutre";
+      el.title = loc.title;
+      el.textContent = getIcon(loc);
+
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openTooltip(loc, el);
+      });
+
+      world.appendChild(el);
+      loc.element = el;
+    }
+
+    // ════════════════════════════════════════════
+    //  TOOLTIP
+    // ════════════════════════════════════════════
+    function openTooltip(loc, markerEl) {
+      const cDef = COUNTRIES[loc.country];
+      tooltipCountry.textContent = cDef ? cDef.label : "";
+      tooltipCountry.style.color = cDef ? cDef.color : "#aaa";
+      tooltipTitle.textContent   = loc.title;
+      tooltipText.textContent    = loc.text || "";
       tooltip.style.display = "block";
-      activeMarker = { element: markerEl, data: location };
+      activeMarker = { element: markerEl, data: loc };
       positionTooltip();
     }
 
@@ -646,179 +871,207 @@
 
     function positionTooltip() {
       if (!activeMarker) return;
-
-      const markerRect = activeMarker.element.getBoundingClientRect();
-      const viewerRect = viewer.getBoundingClientRect();
+      const mr = activeMarker.element.getBoundingClientRect();
+      const vr = viewer.getBoundingClientRect();
 
       tooltip.classList.remove("arrow-top", "arrow-bottom");
       tooltip.style.left = "0px";
-      tooltip.style.top = "0px";
+      tooltip.style.top  = "0px";
+      const tr = tooltip.getBoundingClientRect();
 
-      const tooltipRect = tooltip.getBoundingClientRect();
+      const px = mr.left - vr.left + mr.width  / 2;
+      const py = mr.top  - vr.top  + mr.height / 2;
 
-      const pointX = markerRect.left - viewerRect.left + markerRect.width / 2;
-      const pointY = markerRect.top - viewerRect.top + markerRect.height / 2;
-
-      let left = pointX - tooltipRect.width / 2;
-      let top = pointY - tooltipRect.height - 18;
+      let left = px - tr.width / 2;
+      let top  = py - tr.height - 18;
 
       if (left < 10) left = 10;
-      if (left + tooltipRect.width > viewerRect.width - 10) {
-        left = viewerRect.width - tooltipRect.width - 10;
-      }
+      if (left + tr.width > vr.width - 10) left = vr.width - tr.width - 10;
 
       if (top < 10) {
-        top = pointY + 18;
+        top = py + 18;
         tooltip.classList.add("arrow-top");
       } else {
         tooltip.classList.add("arrow-bottom");
       }
 
       tooltip.style.left = `${left}px`;
-      tooltip.style.top = `${top}px`;
+      tooltip.style.top  = `${top}px`;
     }
 
-    function getLegendEntries() {
-      const entries = [];
-      const grouped = new Map();
+    // ════════════════════════════════════════════
+    //  SIDEBAR — collapsible country sections
+    // ════════════════════════════════════════════
+    function buildSidebar() {
+      countrySections.innerHTML = "";
+
+      // Group locations by country, then by group within each country
+      const byCountry = {};
 
       locations.forEach((loc) => {
+        const c = loc.country || "neutre";
+        if (!byCountry[c]) byCountry[c] = { singles: [], groups: {} };
+
         if (loc.group) {
-          if (!grouped.has(loc.group)) {
-            const groupEntry = {
-              type: "group",
-              key: loc.group,
-              label: loc.groupLabel || loc.label,
+          if (!byCountry[c].groups[loc.group]) {
+            byCountry[c].groups[loc.group] = {
+              groupLabel: loc.groupLabel || loc.group,
               items: [],
               currentIndex: 0
             };
-            grouped.set(loc.group, groupEntry);
-            entries.push(groupEntry);
           }
-
-          grouped.get(loc.group).items.push(loc);
+          byCountry[c].groups[loc.group].items.push(loc);
         } else {
-          entries.push({
-            type: "single",
-            item: loc
-          });
+          byCountry[c].singles.push(loc);
         }
       });
 
-      return entries;
-    }
+      // Render in a defined order
+      const ORDER = ["vent", "feu", "neutre", "cerisiers", "roche"];
 
-    function buildLegend() {
-      legendList.innerHTML = "";
-      const entries = getLegendEntries();
+      ORDER.forEach((key) => {
+        if (!byCountry[key] && !COUNTRIES[key]) return;
+        const cDef = COUNTRIES[key];
+        const data = byCountry[key] || { singles: [], groups: {} };
 
-      entries.forEach((entry) => {
-        const btn = document.createElement("button");
-        btn.className = "legend-item";
+        const section = document.createElement("div");
+        section.className = "country-section";
+        section.dataset.country = key;
 
-        if (entry.type === "single") {
-          btn.textContent = entry.item.label;
+        const header = document.createElement("div");
+        header.className = "country-header";
+        header.innerHTML = `
+          <span class="country-dot"></span>
+          <span class="country-name">${cDef.label}</span>
+          <span class="country-arrow">▶</span>
+        `;
 
+        const body = document.createElement("div");
+        body.className = "country-body";
+
+        const list = document.createElement("div");
+        list.className = "location-list";
+
+        // Singles
+        data.singles.forEach((loc) => {
+          const btn = makeLocationBtn(loc, cDef.color);
+          btn.addEventListener("click", () => navigateTo(loc));
+          list.appendChild(btn);
+        });
+
+        // Groups
+        Object.values(data.groups).forEach((grp) => {
+          const btn = document.createElement("button");
+          btn.className = "legend-item";
+          btn.innerHTML = `<span class="legend-item-dot" style="background:${cDef.color}"></span>${grp.groupLabel} <span style="opacity:.45;font-size:12px;margin-left:auto">(${grp.items.length})</span>`;
           btn.addEventListener("click", () => {
-            centerOn(entry.item.x, entry.item.y, entry.item.zoom || 2.2, true);
-
-            setTimeout(() => {
-              openTooltip(entry.item, entry.item.element);
-            }, 220);
+            const loc = grp.items[grp.currentIndex];
+            navigateTo(loc);
+            grp.currentIndex = (grp.currentIndex + 1) % grp.items.length;
           });
-        }
+          list.appendChild(btn);
+        });
 
-        if (entry.type === "group") {
-          btn.textContent = entry.label;
+        body.appendChild(list);
+        section.appendChild(header);
+        section.appendChild(body);
+        countrySections.appendChild(section);
 
-          btn.addEventListener("click", () => {
-            const loc = entry.items[entry.currentIndex];
+        // Toggle open/close
+        header.addEventListener("click", () => {
+          section.classList.toggle("open");
+        });
 
-            centerOn(loc.x, loc.y, loc.zoom || 2.2, true);
-
-            setTimeout(() => {
-              openTooltip(loc, loc.element);
-            }, 220);
-
-            entry.currentIndex = (entry.currentIndex + 1) % entry.items.length;
-          });
-        }
-
-        legendList.appendChild(btn);
+        // Auto-open if has items
+        const total = data.singles.length + Object.keys(data.groups).length;
+        if (total > 0) section.classList.add("open");
       });
     }
 
+    function makeLocationBtn(loc, color) {
+      const btn = document.createElement("button");
+      btn.className = "legend-item";
+      btn.innerHTML = `<span class="legend-item-dot" style="background:${color}"></span>${loc.label}`;
+      return btn;
+    }
+
+    function navigateTo(loc) {
+      centerOn(loc.x, loc.y, loc.zoom || 2.2, true);
+      setTimeout(() => openTooltip(loc, loc.element), 220);
+    }
+
+    // ════════════════════════════════════════════
+    //  TOGGLE BUTTON POSITION
+    // ════════════════════════════════════════════
+    function updateToggleButtonPosition() {
+      if (sidebar.classList.contains("closed")) {
+        toggleSidebarBtn.classList.add("closed");
+        toggleSidebarBtn.style.left = "14px";
+      } else {
+        toggleSidebarBtn.classList.remove("closed");
+        const w = sidebar.getBoundingClientRect().width;
+        toggleSidebarBtn.style.left = `${w - 1}px`;
+      }
+    }
+
+    // ════════════════════════════════════════════
+    //  INIT
+    // ════════════════════════════════════════════
     function fitMapInitially() {
       const rect = viewer.getBoundingClientRect();
-
-      const scaleX = rect.width / mapWidth;
-      const scaleY = rect.height / mapHeight;
-      scale = clampScale(Math.min(scaleX, scaleY));
-
-      offsetX = (rect.width - mapWidth * scale) / 2;
+      const sx = rect.width / mapWidth, sy = rect.height / mapHeight;
+      scale   = clampScale(Math.min(sx, sy));
+      offsetX = (rect.width  - mapWidth  * scale) / 2;
       offsetY = (rect.height - mapHeight * scale) / 2;
-
       render();
     }
 
-    function createMarkersOnce() {
-      if (markersCreated) return;
-      locations.forEach(createMarker);
-      markersCreated = true;
-    }
-
     function initializeMap() {
-      mapWidth = SVG_VIEWBOX_WIDTH;
-      mapHeight = SVG_VIEWBOX_HEIGHT;
-
+      mapWidth  = SVG_W;
+      mapHeight = SVG_H;
+      resizeCanvas();
+      drawBorders();
       fitMapInitially();
-      createMarkersOnce();
-      buildLegend();
+      if (!markersCreated) {
+        locations.forEach(createMarker);
+        markersCreated = true;
+      }
+      buildSidebar();
       updateToggleButtonPosition();
     }
 
-    map.addEventListener("load", initializeMap);
+    mapImg.addEventListener("load",  initializeMap);
+    mapImg.addEventListener("error", () => console.error("Impossible de charger cartographie-nrp.svg"));
 
-    map.addEventListener("error", () => {
-      console.error("Impossible de charger cartographie-nrp.svg");
-    });
-
+    // ════════════════════════════════════════════
+    //  EVENTS
+    // ════════════════════════════════════════════
     viewer.addEventListener("mousemove", (e) => {
       const rect = viewer.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      const worldX = (mouseX - offsetX) / scale;
-      const worldY = (mouseY - offsetY) / scale;
-
-      coordsDisplay.textContent = `X: ${Math.round(worldX)} | Y: ${Math.round(worldY)}`;
+      const wx = (e.clientX - rect.left - offsetX) / scale;
+      const wy = (e.clientY - rect.top  - offsetY) / scale;
+      coordsDisplay.textContent = `X: ${Math.round(wx)} | Y: ${Math.round(wy)}`;
     });
 
     viewer.addEventListener("wheel", (e) => {
       e.preventDefault();
-      const factor = e.deltaY < 0 ? 1.12 : 0.88;
-      zoomAt(e.clientX, e.clientY, scale * factor);
+      zoomAt(e.clientX, e.clientY, scale * (e.deltaY < 0 ? 1.12 : 0.88));
     }, { passive: false });
 
     viewer.addEventListener("mousedown", (e) => {
       if (e.button !== 0) return;
-
       isDragging = true;
       viewer.classList.add("dragging");
       dragStartX = e.clientX - offsetX;
       dragStartY = e.clientY - offsetY;
-
       closeTooltip();
     });
 
     window.addEventListener("mousemove", (e) => {
       if (!isDragging) return;
-
       offsetX = e.clientX - dragStartX;
       offsetY = e.clientY - dragStartY;
-
-      render();
-      positionTooltip();
+      render(); positionTooltip();
     });
 
     window.addEventListener("mouseup", () => {
@@ -827,15 +1080,11 @@
     });
 
     viewer.addEventListener("click", (e) => {
-      if (e.target === viewer || e.target === world || e.target === map) {
-        closeTooltip();
-      }
+      if (e.target === viewer || e.target === world || e.target === mapImg) closeTooltip();
     });
 
     window.addEventListener("resize", () => {
-      render();
-      positionTooltip();
-      updateToggleButtonPosition();
+      render(); positionTooltip(); updateToggleButtonPosition();
     });
 
     toggleSidebarBtn.addEventListener("click", () => {
@@ -844,11 +1093,52 @@
     });
 
     document.addEventListener("contextmenu", (e) => e.preventDefault());
-    document.addEventListener("dragstart", (e) => e.preventDefault());
+    document.addEventListener("dragstart",   (e) => e.preventDefault());
 
-    if (map.complete) {
-      initializeMap();
-    }
+    // Touch (pinch & drag)
+    let lastTouchDist = null;
+    viewer.addEventListener("touchstart", (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        dragStartX = e.touches[0].clientX - offsetX;
+        dragStartY = e.touches[0].clientY - offsetY;
+        closeTooltip();
+      }
+      if (e.touches.length === 2) {
+        lastTouchDist = Math.hypot(
+          e.touches[1].clientX - e.touches[0].clientX,
+          e.touches[1].clientY - e.touches[0].clientY
+        );
+      }
+    }, { passive: true });
+
+    viewer.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      if (e.touches.length === 1 && isDragging) {
+        offsetX = e.touches[0].clientX - dragStartX;
+        offsetY = e.touches[0].clientY - dragStartY;
+        render();
+      }
+      if (e.touches.length === 2) {
+        const d = Math.hypot(
+          e.touches[1].clientX - e.touches[0].clientX,
+          e.touches[1].clientY - e.touches[0].clientY
+        );
+        if (lastTouchDist) {
+          const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+          const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+          zoomAt(cx, cy, scale * (d / lastTouchDist));
+        }
+        lastTouchDist = d;
+      }
+    }, { passive: false });
+
+    viewer.addEventListener("touchend", () => {
+      isDragging = false;
+      lastTouchDist = null;
+    });
+
+    if (mapImg.complete) initializeMap();
   </script>
 </body>
 </html>

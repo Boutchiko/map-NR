@@ -828,6 +828,32 @@
     }
 
     // ════════════════════════════════════════════
+    //  MARKERS (invisibles)
+    // ════════════════════════════════════════════
+    function createMarker(loc) {
+      const el = document.createElement("button");
+      el.className = "marker";
+    
+      el.style.left = `${loc.x}px`;
+      el.style.top  = `${loc.y}px`;
+    
+      el.dataset.id      = loc.id;
+      el.dataset.country = loc.country || "neutre";
+      el.title = loc.title;
+    
+      // aucun contenu visuel
+      el.textContent = "";
+    
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openTooltip(loc, el);
+      });
+    
+      world.appendChild(el);
+      loc.element = el;
+    }
+
+    // ════════════════════════════════════════════
     //  TOOLTIP
     // ════════════════════════════════════════════
     function openTooltip(loc, markerEl) {

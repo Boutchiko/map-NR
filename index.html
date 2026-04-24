@@ -1115,7 +1115,7 @@
       const wx = Math.round((e.clientX - rect.left - offsetX) / scale);
       const wy = Math.round((e.clientY - rect.top  - offsetY) / scale);
     
-      const text = `${wx}, ${wy}`;
+      const text = `x: ${wx}, y: ${wy}`;
       navigator.clipboard.writeText(text);
     }); 
     document.addEventListener("dragstart",   (e) => e.preventDefault());

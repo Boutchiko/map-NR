@@ -307,21 +307,21 @@
     .country-section[data-country="vent"] .country-dot     { background: #f0c040; }
     .country-section[data-country="vent"] .country-name    { color: #f0c040; }
 
-    .country-section[data-country="feu"] .country-header   { border-color: rgba(255,96,64,0.2); }
-    .country-section[data-country="feu"] .country-dot      { background: #ff6040; }
-    .country-section[data-country="feu"] .country-name     { color: #ff8060; }
-
     .country-section[data-country="neutre"] .country-header  { border-color: rgba(128,192,255,0.2); }
     .country-section[data-country="neutre"] .country-dot     { background: #80c0ff; }
     .country-section[data-country="neutre"] .country-name    { color: #80c0ff; }
 
-    .country-section[data-country="cerisiers"] .country-header { border-color: rgba(255,170,208,0.2); }
-    .country-section[data-country="cerisiers"] .country-dot    { background: #ffaad0; }
-    .country-section[data-country="cerisiers"] .country-name   { color: #ffaad0; }
-
     .country-section[data-country="roche"] .country-header { border-color: rgba(192,168,112,0.2); }
     .country-section[data-country="roche"] .country-dot    { background: #c0a870; }
     .country-section[data-country="roche"] .country-name   { color: #c0a870; }
+
+    .country-section[data-country="cerisiers"] .country-header { border-color: rgba(255,170,208,0.2); }
+    .country-section[data-country="cerisiers"] .country-dot    { background: #ffaad0; }
+    .country-section[data-country="cerisiers"] .country-name   { color: #ffaad0; }
+    
+    .country-section[data-country="feu"] .country-header   { border-color: rgba(255,96,64,0.2); }
+    .country-section[data-country="feu"] .country-dot      { background: #ff6040; }
+    .country-section[data-country="feu"] .country-name     { color: #ff8060; }
 
     /* ── Location list inside a country section ── */
     .country-body {
@@ -483,6 +483,29 @@
           [3904, 697]
         ]
       },
+      roche: {
+        label: "Pays de la Roche",
+        color: "#c0a870",
+        fillAlpha: 0.07,
+        polygon: [
+          [4150, 1380], [4150, 1225],
+          [4075, 1225], [4075, 1164], [4171, 1160],
+          [4177, 1102], [4229, 1080], [4255, 1098],
+          [4312, 1006], [4287, 951], [4224, 925],
+          [4188, 864], [4162, 843], [4148, 697],
+          [3904, 697], [3904, 850], [3835, 850],
+          [3835, 1380]
+        ]
+      },
+      cerisiers: {
+        label: "Pays des Cerisiers",
+        color: "#ffaad0",
+        fillAlpha: 0.07,
+        polygon: [
+          [4150, 1380], [3910, 1380], [3910, 1600], [4149, 1600],
+          [4254, 1535], [4254, 1440]
+        ]
+      },
       feu: {
         label: "Pays du Feu",
         color: "#ff6040",
@@ -497,29 +520,6 @@
           [4425, 798], [4618, 1042], [4668, 1261],
           [4664, 1684], [4632, 1728], [4291, 2061],
           [4124, 2111], [4032, 2097]
-        ]
-      },
-      cerisiers: {
-        label: "Pays des Cerisiers",
-        color: "#ffaad0",
-        fillAlpha: 0.07,
-        polygon: [
-          [4150, 1380], [3910, 1380], [3910, 1600], [4149, 1600],
-          [4254, 1535], [4254, 1440]
-        ]
-      },
-      roche: {
-        label: "Pays de la Roche",
-        color: "#c0a870",
-        fillAlpha: 0.07,
-        polygon: [
-          [4150, 1380], [4150, 1225],
-          [4075, 1225], [4075, 1164], [4171, 1160],
-          [4177, 1102], [4229, 1080], [4255, 1098],
-          [4312, 1006], [4287, 951], [4224, 925],
-          [4188, 864], [4162, 843], [4148, 697],
-          [3904, 697], [3904, 850], [3835, 850],
-          [3835, 1380]
         ]
       }
     };
@@ -660,31 +660,6 @@
         text: "Zone neutre de commerce."
       },
 
-      // ── Pays du Feu ── (exemples, à personnaliser)
-      {
-        id: "konoha", country: "feu",
-        label: "Village Caché des Feuilles",
-        x: 6200, y: 1600, zoom: 2.5,
-        title: "Village Caché des Feuilles",
-        text: "Village principal du Pays du Feu."
-      },
-      {
-        id: "feu_forteresse", country: "feu",
-        label: "Forteresse",
-        x: 6500, y: 2200, zoom: 2.5,
-        title: "Forteresse",
-        text: "Poste avancé militaire."
-      },
-      
-      // ── Pays des Cerisiers ── (exemples)
-      {
-        id: "cerisiers_village", country: "cerisiers",
-        label: "Village des Cerisiers",
-        x: 700, y: 900, zoom: 2.5,
-        title: "Village des Cerisiers",
-        text: "Paisible village fleuri."
-      },
-
       // ── Pays de la Roche ── (exemples)
       {
         id: "roche_mine", country: "roche",
@@ -720,6 +695,31 @@
         label: "Drapeau du Pays de la Roche",
         x: 3603, y: 710, zoom: 2.5,
         title: "Drapeau", text: ""
+      },
+      
+      // ── Pays des Cerisiers ── (exemples)
+      {
+        id: "cerisiers_village", country: "cerisiers",
+        label: "Village des Cerisiers",
+        x: 700, y: 900, zoom: 2.5,
+        title: "Village des Cerisiers",
+        text: "Paisible village fleuri."
+      },
+
+      // ── Pays du Feu ── (exemples, à personnaliser)
+      {
+        id: "konoha", country: "feu",
+        label: "Village Caché des Feuilles",
+        x: 6200, y: 1600, zoom: 2.5,
+        title: "Village Caché des Feuilles",
+        text: "Village principal du Pays du Feu."
+      },
+      {
+        id: "feu_forteresse", country: "feu",
+        label: "Forteresse",
+        x: 6500, y: 2200, zoom: 2.5,
+        title: "Forteresse",
+        text: "Poste avancé militaire."
       }
     ];
 

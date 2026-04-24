@@ -828,45 +828,6 @@
     }
 
     // ════════════════════════════════════════════
-    //  MARKERS
-    // ════════════════════════════════════════════
-    const ICONS = {
-      palais: "🏰", place: "⛩️", police_1: "🛡️", hospital_1: "⚕️",
-      dojo: "⚔️", temple: "🕌", mine: "⛏️",
-      konoha: "🌿", feu_forteresse: "🔥",
-      neutre_carrefour: "🤝",
-      cerisiers_village: "🌸",
-      roche_mine: "🪨",
-    };
-
-    function getIcon(loc) {
-      if (ICONS[loc.id]) return ICONS[loc.id];
-      if (loc.group === "arene")  return "⚡";
-      if (loc.group === "flag")   return "🚩";
-      if (loc.group === "oasis")  return "💧";
-      return "📍";
-    }
-
-    function createMarker(loc) {
-      const el = document.createElement("button");
-      el.className = "marker";
-      el.style.left = `${loc.x}px`;
-      el.style.top  = `${loc.y}px`;
-      el.dataset.id      = loc.id;
-      el.dataset.country = loc.country || "neutre";
-      el.title = loc.title;
-      el.textContent = getIcon(loc);
-
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        openTooltip(loc, el);
-      });
-
-      world.appendChild(el);
-      loc.element = el;
-    }
-
-    // ════════════════════════════════════════════
     //  TOOLTIP
     // ════════════════════════════════════════════
     function openTooltip(loc, markerEl) {

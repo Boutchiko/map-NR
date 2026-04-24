@@ -475,7 +475,10 @@
         polygon: [
           [3904, 850], [3835, 850], [3835, 1512],
           [3662, 1512], [3662, 1810], [3762, 1810],
-          [3923, 2000], [3923, 1740], [4246, 1535]
+          [3923, 2000], [3923, 1740], [4255, 1535],
+          [4255, 1440], [4150, 1380], [4150, 1225],
+          [4075, 1225], [4150, 1380], [4150, 1225],
+          [4255, 1440], [4150, 1380], [4150, 1225]
         ]
       },
       cerisiers: {
@@ -1092,7 +1095,16 @@
       updateToggleButtonPosition();
     });
 
-    document.addEventListener("contextmenu", (e) => e.preventDefault());
+    viewer.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+    
+      const rect = viewer.getBoundingClientRect();
+      const wx = Math.round((e.clientX - rect.left - offsetX) / scale);
+      const wy = Math.round((e.clientY - rect.top  - offsetY) / scale);
+    
+      const text = `${wx}, ${wy}`;
+      navigator.clipboard.writeText(text);
+    }); 
     document.addEventListener("dragstart",   (e) => e.preventDefault());
 
     // Touch (pinch & drag)
